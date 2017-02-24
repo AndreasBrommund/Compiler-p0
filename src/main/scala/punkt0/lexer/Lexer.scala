@@ -30,7 +30,7 @@ object Lexer extends Phase[File, Iterator[Token]] {
 
         nextChar = source.next()
 
-        var res = a(currentChar,source)
+        var res = findToken(currentChar,source)
 
         currentChar = nextChar
         res
@@ -65,7 +65,7 @@ object Lexer extends Phase[File, Iterator[Token]] {
     case _ => new ID(literal)
   }
   //TODO better name needed
-  def a (currentChar: Char, source: scala.io.BufferedSource) : Token =  {
+  def findToken (currentChar: Char, source: scala.io.BufferedSource) : Token =  {
     currentChar match {
       case digit if digit.isDigit && digit != '0' =>
 
