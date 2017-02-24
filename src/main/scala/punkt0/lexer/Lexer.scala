@@ -131,7 +131,11 @@ object Lexer extends Phase[File, Iterator[Token]] {
       case '+' => new Token(PLUS)
       case '-' => new Token(MINUS)
       case '*' => new Token(TIMES)
-      case '/' => ??? //TODO // '/' '//' '/*'
+      case '/' => currentChar match {
+        case '/' => ??? //TODO remove alla characters until new line or EOF and call the method findToken one more time, to get a token
+        case '*' => ??? //TODO remove alla characters until next */ or EOF and call the method findToken one more time, to get a token
+        case _   => new Token(DIV)
+        }
       case _   => new Token(BAD) //TODO fix consume char or have multiple bads until valid char
     }
   }
