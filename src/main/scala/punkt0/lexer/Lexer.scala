@@ -30,7 +30,7 @@ object Lexer extends Phase[File, Iterator[Token]] {
 
         nextChar = source.next()
 
-        var res = findToken(currentChar,source)
+        val res = findToken(currentChar,source)
 
         currentChar = nextChar
         res
@@ -88,10 +88,10 @@ object Lexer extends Phase[File, Iterator[Token]] {
 
         getToken(buffer.toString())
 
-      case whiteSpace if(whiteSpace.isWhitespace) => ??? //TODO White space
+      case whiteSpace if whiteSpace.isWhitespace => ??? //TODO White space
 
       case '"' =>
-        var buffer = new StringBuilder
+        val buffer = new StringBuilder
         while(nextChar != '"'){
           buffer.append(nextChar)
           if(!source.hasNext)
