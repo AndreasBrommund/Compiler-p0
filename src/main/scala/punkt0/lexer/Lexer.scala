@@ -94,14 +94,37 @@ object Lexer extends Phase[File, Iterator[Token]] {
 
       case '"' =>
         val buffer = new StringBuilder
-        while (nextChar.isDefined && nextChar.get != '"') {
-          buffer.append(nextChar.get)
-          nextChar = getNextChar(source)
+
+
+        //TODO this loop is looping in infinity, not good
+        while (true){
+          nextChar match {
+            case Some('"') =>
+              nextChar = getNextChar(source)
+              new STRLIT(buffer.toString)
+            case Some('\n') | None =>
+              new Token(BAD)
+            case Some(char) => ßß
+              buffer.append(char)
+              nextChar = getNextChar(source)
+          }
+        }
+
+        while (nextChar.isDefined) {
+          if(nextChar.get == '"'){
+            nextChar = getNextChar(source)
+            new STRLIT(buffer.toString())
+          }else{
+            nextChar = getNextChar(source)
+            buffer.append(nextChar.get)
+          }
+
+
           if (nextChar.isEmpty || nextChar.get == '\n')
             new Token(BAD) //TODO fix later
         }
 
-        new STRLIT(buffer.toString())
+        new Token(BAD)
 
       case ':' => new Token(COLON)
       case ';' => new Token(SEMICOLON)
