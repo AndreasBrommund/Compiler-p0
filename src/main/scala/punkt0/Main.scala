@@ -19,6 +19,10 @@ object Main {
         ctx = ctx.copy(outDir = Some(new File(out)))
         processOption(args)
 
+      case "--tokens" :: args =>
+        ctx = ctx.copy(doTokens = true)
+        processOption(args)
+
       case f :: args =>
         ctx = ctx.copy(file = Some(new File(f)))
         processOption(args)
@@ -43,9 +47,23 @@ object Main {
     println(" -d <outdir>   generates class files in the specified directory")
   }
 
+  def displayTokens(tokenIterator: Iterator[Token]) : Unit = {
+    while(tokenIterator.hasNext)
+      println(tokenIterator.next())
+
+  }
+
   def main(args: Array[String]): Unit = {
     val ctx = processOptions(args)
 
+    val tokenIterator = ctx.file match {
+      case Some(file) => Lexer.run(file)(ctx)
+      case None => sys.error("No file")//TODO Handle error
+    }
+
+    if(ctx.doTokens){
+      displayTokens(tokenIterator)
+    }
     // TODO: run lexer phase
   }
 
