@@ -82,7 +82,8 @@ object Lexer extends Phase[File, Iterator[Token]] {
         new INTLIT(integer)
 
       case alfa if alfa.isLetter =>
-        val buffer = new StringBuilder(alfa)
+        val buffer = new StringBuilder
+        buffer.append(alfa)
 
         while (nextChar.isDefined && (nextChar.get.isLetterOrDigit || nextChar.get == '_')) {
           buffer.append(nextChar.get)
