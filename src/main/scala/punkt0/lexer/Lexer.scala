@@ -104,7 +104,7 @@ object Lexer extends Phase[File, Iterator[Token]] {
               new STRLIT(buffer.toString)
             case Some('\n') | None =>
               new Token(BAD)
-            case Some(char) => ßß
+            case Some(char) =>
               buffer.append(char)
               nextChar = getNextChar(source)
           }
