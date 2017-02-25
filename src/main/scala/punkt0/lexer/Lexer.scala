@@ -18,15 +18,22 @@ object Lexer extends Phase[File, Iterator[Token]] {
 
 
 
-      def hasNext = currentChar.isDefined
+      var hasNext = true
 
       def next = {
 
-        //TODO fix EOF
+        while (currentChar.isDefined && currentChar.get.isWhitespace){
+          currentChar = getNextChar(source)
+        }
 
-        val tuple = findToken(currentChar.get, source)
-        currentChar = tuple._2
-        tuple._1
+        if(currentChar.isEmpty){
+          hasNext = false
+          new Token(EOF)
+        }else{
+          val tuple = findToken(currentChar.get, source)
+          currentChar = tuple._2
+          tuple._1
+        }
       }
     }
   }
