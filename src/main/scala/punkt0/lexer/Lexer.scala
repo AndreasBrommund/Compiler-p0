@@ -7,34 +7,26 @@ import java.io.File
 object Lexer extends Phase[File, Iterator[Token]] {
   import Reporter._
 
-  var lastSeenToken : Option[Token] = None
-  var previousIsWhitespace = false
-  var nextChar : Char = ' '
-
   def run(f: File)(ctx: Context): Iterator[Token] = {
     val source = scala.io.Source.fromFile(f)
 
     // TODO: implement this method
 
-    var currentChar = source.next()
+    var currentChar : Option[Char] = Some(source.next())
 
     new Iterator[Token] {
 
-      def hasNext = {
-        ???
-      }
+
+
+      def hasNext = currentChar.isDefined
 
       def next = {
 
         //TODO fix EOF
 
-        nextChar = source.next()
-
-        val res = findToken(currentChar,source)
-
-        currentChar = nextChar
-        res
-
+        val tuple = findToken(currentChar.get, source)
+        currentChar = tuple._2
+        tuple._1
       }
     }
   }
@@ -42,7 +34,7 @@ object Lexer extends Phase[File, Iterator[Token]] {
       case Some(t) => previousIsWhitespace || !(t.isInstanceOf[ID] || t.isInstanceOf[INTLIT] || t.isInstanceOf[STRLIT])
       case None => true
     }*/
-  def getToken(literal: String) : Token = literal match {
+  def getToken(literal: String): Token = literal match {
     case "object" => new Token(OBJECT)
     case "class" => new Token(CLASS)
     case "def" => new Token(DEF)
@@ -64,79 +56,98 @@ object Lexer extends Phase[File, Iterator[Token]] {
     case "println" => new Token(PRINTLN)
     case _ => new ID(literal)
   }
-  //TODO better name needed
-  def findToken (currentChar: Char, source: scala.io.BufferedSource) : Token =  {
-    currentChar match {
-      case digit if digit.isDigit && digit != '0' =>
 
+  //Example: 123ABS is allowed in the Lexer but are gonna yield an error in the Parser
+  //Return condition: nextChar is always gonna be the char after the token, e.q. 123A nextChar = A and token = 123
+  def findToken(currentChar: Char, source: scala.io.BufferedSource): (Token, Option[Char]) = {
+
+    var nextChar = getNextChar(source)
+
+    val newToken = currentChar match {
+      case digit if digit.isDigit && digit != '0' =>
         var integer = digit.asDigit
-        while (nextChar.isDigit){
-          integer = integer*10+nextChar.asDigit
-          nextChar = source.next()
+
+        while (nextChar.isDefined && nextChar.get.isDigit) {
+          integer = integer * 10 + nextChar.get.asDigit
+          nextChar = getNextChar(source)
         }
 
         new INTLIT(integer)
 
-      case alfa if alfa.isLetter  =>
-        val buffer = new StringBuilder
-        buffer.append(alfa)
+      case alfa if alfa.isLetter =>
+        val buffer = new StringBuilder(alfa)
 
-        while(nextChar.isLetter || nextChar.isDigit || nextChar == '_'){
-          buffer.append(nextChar)
-          nextChar = source.next()
+        while (nextChar.isDefined && (nextChar.get.isLetterOrDigit || nextChar.get == '_')) {
+          buffer.append(nextChar.get)
+          nextChar = getNextChar(source)
         }
 
-        getToken(buffer.toString())
-
-      case whiteSpace if whiteSpace.isWhitespace => ??? //TODO White space
+        getToken(buffer.toString)
 
       case '"' =>
         val buffer = new StringBuilder
-        while(nextChar != '"'){
-          buffer.append(nextChar)
-          if(!source.hasNext)
+        while (nextChar.isDefined && nextChar.get != '"') {
+          buffer.append(nextChar.get)
+          nextChar = getNextChar(source)
+          if (nextChar.isEmpty || nextChar.get == '\n')
             new Token(BAD) //TODO fix later
-          nextChar = source.next()
         }
+
         new STRLIT(buffer.toString())
 
       case ':' => new Token(COLON)
       case ';' => new Token(SEMICOLON)
       case '.' => new Token(DOT)
       case ',' => new Token(COMMA)
-      case '=' =>
-        if(nextChar == '=')
-          new Token(EQUALS)
-        else
-          new Token(EQSIGN)
-
       case '!' => new Token(BANG)
       case '(' => new Token(LPAREN)
       case ')' => new Token(RPAREN)
       case '{' => new Token(LBRACE)
       case '}' => new Token(RBRACE)
-      case '&' =>
-        if(nextChar == '&')
-          new Token(AND)
-        else
-          new Token(BAD) //TODO fix later
-
-      case '|' =>
-        if(nextChar == '|')
-          new Token(OR)
-        else
-          new Token(BAD) //TODO fix later
-
       case '<' => new Token(LESSTHAN)
       case '+' => new Token(PLUS)
       case '-' => new Token(MINUS)
       case '*' => new Token(TIMES)
-      case '/' => currentChar match {
-        case '/' => ??? //TODO remove alla characters until new line or EOF and call the method findToken one more time, to get a token
-        case '*' => ??? //TODO remove alla characters until next */ or EOF and call the method findToken one more time, to get a token
-        case _   => new Token(DIV)
+      case '&' =>
+        nextChar match {
+          case Some('&') =>
+            nextChar = getNextChar(source)
+            new Token(AND)
+
+          case _ => new Token(BAD) //TODO fix later
         }
-      case _   => new Token(BAD) //TODO fix consume char or have multiple bads until valid char
+      case '|' =>
+        nextChar match {
+          case Some('|') =>
+            nextChar = getNextChar(source)
+            new Token(OR)
+
+          case _ => new Token(BAD) //TODO fix later
+        }
+
+      case '/' => nextChar match {
+        case Some('/') => ??? //TODO remove alla characters until new line or EOF and call the method findToken one more time, to get a token
+        case Some('*') => ??? //TODO remove alla characters until next */ or EOF and call the method findToken one more time, to get a token
+        case _ => new Token(DIV)
+      }
+      case '=' =>
+        nextChar match {
+          case Some('=') =>
+            nextChar = getNextChar(source)
+            new Token(EQUALS)
+
+          case _ => new Token(EQSIGN)
+        }
+      case _ => new Token(BAD) //TODO fix consume char or have multiple bads until valid char
     }
+
+    (newToken, nextChar)
+  }
+
+  def getNextChar(source: scala.io.BufferedSource): Option[Char] = {
+    if (source.hasNext)
+      Some(source.next())
+    else
+      None
   }
 }
