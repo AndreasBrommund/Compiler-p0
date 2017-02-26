@@ -48,8 +48,10 @@ object Main {
   }
 
   def displayTokens(tokenIterator: Iterator[Token]) : Unit = {
-    while(tokenIterator.hasNext)
-      println(tokenIterator.next())
+    while(tokenIterator.hasNext) {
+      val token = tokenIterator.next
+      println(token + "" + token.posString)
+    }
 
   }
 

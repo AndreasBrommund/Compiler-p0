@@ -25,14 +25,17 @@ object Lexer extends Phase[File, Iterator[Token]] {
         while (currentChar.isDefined && currentChar.get.isWhitespace){
           currentChar = getNextChar(source)
         }
+        //TODO Eat comments here to solve the  problem with position, maybe handle div here too.
+        //TODO Need to think about how BAD works, if we gonna have pos here.
+        val pos = new Positioned {setPos(f,source.pos)}
 
         if(currentChar.isEmpty){
           hasNext = false
-          new Token(EOF)
+          new Token(EOF).setPos(pos)
         }else{
           val tuple = findToken(currentChar.get, source)
           currentChar = tuple._2
-          tuple._1
+          tuple._1.setPos(pos)
         }
       }
     }
@@ -157,9 +160,9 @@ object Lexer extends Phase[File, Iterator[Token]] {
         }
 
       case '/' => nextChar match {
-        case Some('/') => ??? //TODO remove alla characters until new line or EOF and call the method findToken one more time, to get a token
-        case Some('*') => ??? //TODO remove alla characters until next */ or EOF and call the method findToken one more time, to get a token
-        case _ => new Token(DIV)
+        case Some('/') => ??? //TODO Don't do comment handling here, see comment in run
+        case Some('*') => ??? //TODO Don't do comment handling here, see comment in run
+        case _ => new Token(DIV) //TODO Don't handle it here, see comment in run
       }
       case '=' =>
         nextChar match {
