@@ -10,9 +10,7 @@ object Lexer extends Phase[File, Iterator[Token]] {
   def run(f: File)(ctx: Context): Iterator[Token] = {
     val source = scala.io.Source.fromFile(f)
 
-    // TODO: implement this method
-
-    var currentChar : Option[Char] = Some(source.next())
+    var currentChar : Option[Char] = Some(source.next()) //TODO breaks if the file is empty
 
     new Iterator[Token] {
 
@@ -99,35 +97,22 @@ object Lexer extends Phase[File, Iterator[Token]] {
         val buffer = new StringBuilder
 
 
-        //TODO this loop is looping in infinity, not good
-        while (true){
-          nextChar match {
+        //TODO Talk to Hadar about this
+        while (nextChar.isDefined&&nextChar.get != '\n'&&nextChar.get != '"'){
+          buffer.append(nextChar.get)
+          nextChar = getNextChar(source)
+        }
+
+        //Next char is always gonna be ", \n or None
+        nextChar match {
             case Some('"') =>
               nextChar = getNextChar(source)
               new STRLIT(buffer.toString)
             case Some('\n') | None =>
-              new Token(BAD)
-            case Some(char) =>
-              buffer.append(char)
               nextChar = getNextChar(source)
-          }
+              println(nextChar)
+              new Token(BAD) //TODO handle BAD better
         }
-
-        while (nextChar.isDefined) {
-          if(nextChar.get == '"'){
-            nextChar = getNextChar(source)
-            new STRLIT(buffer.toString())
-          }else{
-            nextChar = getNextChar(source)
-            buffer.append(nextChar.get)
-          }
-
-
-          if (nextChar.isEmpty || nextChar.get == '\n')
-            new Token(BAD) //TODO fix later
-        }
-
-        new Token(BAD)
 
       case ':' => new Token(COLON)
       case ';' => new Token(SEMICOLON)
