@@ -3,6 +3,8 @@ package lexer
 
 import java.io.File
 
+import punkt0.Positioned
+
 
 object Lexer extends Phase[File, Iterator[Token]] {
   import Reporter._
@@ -14,24 +16,28 @@ object Lexer extends Phase[File, Iterator[Token]] {
 
     new Iterator[Token] {
 
-
-
       var hasNext = true
 
       def next = {
 
-        while (currentChar.isDefined && currentChar.get.isWhitespace){
-          currentChar = getNextChar(source)
+        val res = consumeUnecessaryChars(currentChar,getNextChar(source),source)
+        currentChar = res._1
+        val nextChar = res._2
+
+        (currentChar,nextChar) match {
+          case(Some(_),Some(_)) =>
+          case (Some(_),None)   =>
+          case (None,None) =>
         }
-        //TODO Eat comments here to solve the  problem with position, maybe handle div here too.
+
         //TODO Need to think about how BAD works, if we gonna have pos here.
-        val pos = new Positioned {setPos(f,source.pos)}
+
 
         if(currentChar.isEmpty){
           hasNext = false
           new Token(EOF).setPos(pos)
         }else{
-          val tuple = findToken(currentChar.get, source)
+          val tuple = findToken(currentChar.get,nextChar,source)
           currentChar = tuple._2
           tuple._1.setPos(pos)
         }
@@ -67,9 +73,9 @@ object Lexer extends Phase[File, Iterator[Token]] {
 
   //Example: 123ABS is allowed in the Lexer but are gonna yield an error in the Parser
   //Return condition: nextChar is always gonna be the char after the token, e.q. 123A nextChar = A and token = 123
-  def findToken(currentChar: Char, source: scala.io.BufferedSource): (Token, Option[Char]) = {
+  def findToken(currentChar: Char, next: Option[Char],source: scala.io.BufferedSource): (Token, Option[Char]) = {
 
-    var nextChar = getNextChar(source)
+    var nextChar = next
 
     val newToken = currentChar match {
       case digit if digit.isDigit && digit != '0' =>
@@ -96,22 +102,19 @@ object Lexer extends Phase[File, Iterator[Token]] {
       case '"' =>
         val buffer = new StringBuilder
 
-
-        //TODO Talk to Hadar about this
         while (nextChar.isDefined&&nextChar.get != '\n'&&nextChar.get != '"'){
           buffer.append(nextChar.get)
           nextChar = getNextChar(source)
         }
 
-        //Next char is always gonna be ", \n or None
         nextChar match {
             case Some('"') =>
               nextChar = getNextChar(source)
               new STRLIT(buffer.toString)
-            case Some('\n') | None =>
+            case _ => //Always gonna be None or \n
               nextChar = getNextChar(source)
-              println(nextChar)
               new Token(BAD) //TODO handle BAD better
+
         }
 
       case ':' => new Token(COLON)
@@ -127,6 +130,7 @@ object Lexer extends Phase[File, Iterator[Token]] {
       case '+' => new Token(PLUS)
       case '-' => new Token(MINUS)
       case '*' => new Token(TIMES)
+      case '/' => new Token(DIV)
       case '&' =>
         nextChar match {
           case Some('&') =>
@@ -143,12 +147,6 @@ object Lexer extends Phase[File, Iterator[Token]] {
 
           case _ => new Token(BAD) //TODO fix later
         }
-
-      case '/' => nextChar match {
-        case Some('/') => ??? //TODO Don't do comment handling here, see comment in run
-        case Some('*') => ??? //TODO Don't do comment handling here, see comment in run
-        case _ => new Token(DIV) //TODO Don't handle it here, see comment in run
-      }
       case '=' =>
         nextChar match {
           case Some('=') =>
@@ -161,6 +159,28 @@ object Lexer extends Phase[File, Iterator[Token]] {
     }
 
     (newToken, nextChar)
+  }
+
+  def consumeUnecessaryChars(currentChar: Option[Char],nextChar: Option[Char],source: scala.io.BufferedSource) : (Option[Char],Option[Char]) = {
+    var current = currentChar
+    var next = nextChar
+    var ret = false
+
+    (current,next) match {
+      case (Some('/'),Some('/')) =>
+        do{
+          current = getNextChar(source)
+        } while(current.isDefined && current.get != '\n')
+        next = getNextChar(source)
+      case (Some('/'),Some('*')) =>
+      case (Some(first),_) if first.isWhitespace =>
+      case _ => ret = true
+    }
+
+    if(!ret)
+      consumeUnecessaryChars(current,next,source)
+    else
+      (current,next)
   }
 
   def getNextChar(source: scala.io.BufferedSource): Option[Char] = {

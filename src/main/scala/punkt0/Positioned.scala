@@ -35,8 +35,7 @@ trait Positioned {
   }
 
   def posString: String =
-    //if (hasPos) file.getPath + ":" + line + ":" + column
-    if (hasPos) "("+ line + ":" + column+")"
+    if (hasPos) file.getPath + ":" + line + ":" + column
     else "?:?"
 }
 

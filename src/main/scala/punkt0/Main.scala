@@ -50,7 +50,7 @@ object Main {
   def displayTokens(tokenIterator: Iterator[Token]) : Unit = {
     while(tokenIterator.hasNext) {
       val token = tokenIterator.next
-      println(token + "" + token.posString)
+      printf("%s(%d:%d)\n",token,token.line,token.column)
     }
 
   }
