@@ -3,7 +3,7 @@ package lexer
 
 import java.io.File
 
-import punkt0.Positioned
+import punkt0.{lexer, Positioned}
 
 
 object Lexer extends Phase[File, Iterator[Token]] {
@@ -12,11 +12,15 @@ object Lexer extends Phase[File, Iterator[Token]] {
 
   import Reporter._
 
+  var previousIsBad = false;
+
   def run(f: File)(ctx: Context): Iterator[Token] = {
     val source = scala.io.Source.fromFile(f)
 
-    var currentChar: Option[Char] = Some(source.next()) //TODO breaks if the file is empty
-
+    var currentChar: Option[Char] = None
+    if(source.hasNext){
+      currentChar = getNextChar(source)
+    }
 
     new Iterator[Token] {
       var hasNext = true
@@ -25,36 +29,14 @@ object Lexer extends Phase[File, Iterator[Token]] {
         val tuple = findToken(currentChar, f, source)
         currentChar = tuple._2
         hasNext = tuple._3
+
+        tuple._1.kind match {
+          case BAD => previousIsBad = true
+          case _   => previousIsBad = false
+        }
         tuple._1
       }
     }
-  }
-
-  /*def validStart() : Boolean = lastSeenToken match {
-  case Some(t) => previousIsWhitespace || !(t.isInstanceOf[ID] || t.isInstanceOf[INTLIT] || t.isInstanceOf[STRLIT])
-  case None => true
-  }*/
-  def getToken(literal: String): Token = literal match {
-    case "object" => new Token(OBJECT)
-    case "class" => new Token(CLASS)
-    case "def" => new Token(DEF)
-    case "override" => new Token(OVERRIDE)
-    case "var" => new Token(VAR)
-    case "Unit" => new Token(UNIT)
-    case "String" => new Token(STRING)
-    case "extends" => new Token(EXTENDS)
-    case "Int" => new Token(INT)
-    case "Boolean" => new Token(BOOLEAN)
-    case "while" => new Token(WHILE)
-    case "if" => new Token(IF)
-    case "else" => new Token(ELSE)
-    case "true" => new Token(TRUE)
-    case "false" => new Token(FALSE)
-    case "this" => new Token(THIS)
-    case "null" => new Token(NULL)
-    case "new" => new Token(NEW)
-    case "println" => new Token(PRINTLN)
-    case _ => new ID(literal)
   }
 
   //Example: 123ABS is allowed in the Lexer but are gonna yield an error in the Parser
@@ -112,8 +94,11 @@ object Lexer extends Phase[File, Iterator[Token]] {
               new STRLIT(buffer.toString)
             case _ => //Always gonna be None or \n
               nextChar = getNextChar(source)
-              new Token(BAD) //TODO handle BAD better
-
+              val res = handleBad("Need to end string literal",pos,nextChar, f, source)
+              nextChar = res._2
+              hasNext = res._3
+              pos = res._4
+              res._1 //TODO Hadar
           }
 
         case ':' => new Token(COLON)
@@ -160,14 +145,24 @@ object Lexer extends Phase[File, Iterator[Token]] {
               }
               (nextChar,secondNext) match {
                 case (Some(_),Some(_)) =>
-                  val r = findToken(getNextChar(source), f, source)
-                  nextChar = r._2
-                  hasNext = r._3
-                  pos = r._4
-                  r._1
-                case _ =>
-                  nextChar = None
-                  new Token(BAD) //TODO fix later
+                  val res = findToken(getNextChar(source), f, source)
+                  nextChar = res._2
+                  hasNext = res._3
+                  pos = res._4
+                  res._1
+                case (Some(next) , None) =>
+                  val res = handleBad("Need to end comment",pos,Some(next), f, source)
+                  nextChar = res._2
+                  hasNext = res._3
+                  pos = res._4
+                  res._1 //TODO Hadar
+                case (None, None) =>
+                  val res = handleBad("Need to end comment",pos,None, f, source)
+                  nextChar = res._2
+                  hasNext = res._3
+                  pos = res._4
+                  res._1 //TODO Hadar
+                case _ => ??? //Not gonna happen
               }
 
             case Some(_) | None => new Token(DIV)
@@ -178,7 +173,12 @@ object Lexer extends Phase[File, Iterator[Token]] {
               nextChar = getNextChar(source)
               new Token(AND)
 
-            case _ => new Token(BAD) //TODO fix later
+            case next =>
+              val res = handleBad("Expect &",pos,next, f, source)
+              nextChar = res._2
+              hasNext = res._3
+              pos = res._4
+              res._1 //TODO Hadar
           }
         case '|' =>
           nextChar match {
@@ -186,7 +186,12 @@ object Lexer extends Phase[File, Iterator[Token]] {
               nextChar = getNextChar(source)
               new Token(OR)
 
-            case _ => new Token(BAD) //TODO fix later
+            case next =>
+              val res = handleBad("Expect |",pos,next, f, source)
+              nextChar = res._2
+              hasNext = res._3
+              pos = res._4
+              res._1 //TODO Hadar
           }
         case '=' =>
           nextChar match {
@@ -196,13 +201,53 @@ object Lexer extends Phase[File, Iterator[Token]] {
 
             case _ => new Token(EQSIGN)
           }
-        case _ => new Token(BAD) //TODO fix consume char or have multiple bads until valid char
+        case _ =>
+          val res = handleBad("Invalid char",pos,nextChar, f, source)
+          nextChar = res._2
+          hasNext = res._3
+          pos = res._4
+          res._1 //TODO Hadar
       }
       (newToken.setPos(pos), nextChar,hasNext,pos)
     }
   }
 
+  /*def validStart() : Boolean = lastSeenToken match {
+  case Some(t) => previousIsWhitespace || !(t.isInstanceOf[ID] || t.isInstanceOf[INTLIT] || t.isInstanceOf[STRLIT])
+  case None => true
+  }*/
+  def getToken(literal: String): Token = literal match {
+    case "object" => new Token(OBJECT)
+    case "class" => new Token(CLASS)
+    case "def" => new Token(DEF)
+    case "override" => new Token(OVERRIDE)
+    case "var" => new Token(VAR)
+    case "Unit" => new Token(UNIT)
+    case "String" => new Token(STRING)
+    case "extends" => new Token(EXTENDS)
+    case "Int" => new Token(INT)
+    case "Boolean" => new Token(BOOLEAN)
+    case "while" => new Token(WHILE)
+    case "if" => new Token(IF)
+    case "else" => new Token(ELSE)
+    case "true" => new Token(TRUE)
+    case "false" => new Token(FALSE)
+    case "this" => new Token(THIS)
+    case "null" => new Token(NULL)
+    case "new" => new Token(NEW)
+    case "println" => new Token(PRINTLN)
+    case _ => new ID(literal)
+  }
 
+  def handleBad(msg: String,pos: Positioned,next: Option[Char], f: File, source: scala.io.BufferedSource) : (Token, Option[Char],Boolean,Positioned) = {
+    if(previousIsBad){
+      findToken(next,f,source)
+    }else{
+      Reporter.error(msg,pos)
+      (new Token(BAD),next,true,pos)
+    }
+
+  }
 
   def getNextChar(source: scala.io.BufferedSource): Option[Char] = {
     if (source.hasNext)
