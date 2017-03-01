@@ -45,6 +45,11 @@ details you should pay attention to:
 * Your compiler should terminate with exit code `1` in case the lexer
   detected errors. See method `Reporter.terminateIfErrors`.
 
+* **Update 28 Feb 2017:** The grammar of Punkt0 has been updated. The
+  definition of non-terminal *MainDeclaration* has been changed (a) to
+  ensure Punkt0 is a valid subset of Scala, and (b) to permit local
+  variable declarations. No new tokens have been introduced, however.
+
 ## Code stubs
 
 We provide code stubs for your project. Your task is to complete the
@@ -55,7 +60,7 @@ file `Lexer.scala` and to implement the above `--tokens` option in
 | ------------------- | --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | *Program*           | ::= | ( *ClassDeclaration* ) * *MainDeclaration* <EOF>                                                                                                                                              |
 | *ClassDeclaration*  | ::= | **class** *Identifier* ( **extends** *Identifier* )? **{** ( *VarDeclaration* ) * ( *MethodDeclaration* ) * **}**                                                                             |
-| *MainDeclaration*   | ::= | **object** *Identifier* **{** **def** *Identifier* **(** **)** **:** **Unit** **=** **{** *Expression* ( **;** *Expression* ) * **}** **}**                                                   |
+| *MainDeclaration*   | ::= | **object** *Identifier* **extends** *Identifier* **{** ( *VarDeclaration* ) * *Expression* ( **;** *Expression* ) * **}**                                                  |
 | *VarDeclaration*    | ::= | **var** *Identifier* **:** *Type* **=** *Expression* **;**                                                                                                                                    |
 | *MethodDeclaration* | ::= | ( **override** )? **def** *Identifier* **(** ( *Identifier* **:** *Type* ( **,** *Identifier* **:** *Type* ) * )? **)** **:** *Type* = **{** ( *VarDeclaration* ) * *Expression* ( **;** *Expression* ) * **}** |
 | *Type*              | ::= | **Boolean**                                                                                                                                                                                   |
@@ -63,7 +68,7 @@ file `Lexer.scala` and to implement the above `--tokens` option in
 |                     |     | **String**                                                                                                                                                                                    |
 |                     |     | **Unit**                                                                                                                                                                                      |
 |                     |     | *Identifier*                                                                                                                                                                                  |
-| *Expression*        | ::= | *Expression* ( **&&** | **||** | **==** | **<** | **+** | **-** | ** * ** | **/** ) *Expression*                                                                                              |
+| *Expression*        | ::= | *Expression* ( **&&** &#124; **&#124;&#124;** &#124; **==** &#124; **<** &#124; **+** &#124; **-** &#124; **&#42;** &#124; **/** ) *Expression*                                                                                              |
 |                     |     | *Expression* **.** *Identifier* **(** ( Expression ( **,** Expression ) * )? **)**                                                                                                            |
 |                     |     | `<INTEGER_LITERAL>`                                                                                                                                                                           |
 |                     |     | **"** `<STRING_LITERAL>` **"**                                                                                                                                                                |
