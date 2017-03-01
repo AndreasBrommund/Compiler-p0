@@ -1,0 +1,5 @@
+TIMES(1:7)
+DIV(1:8)
+DIV(8:1)
+CLASS(9:1)
+EOF(9:5)
