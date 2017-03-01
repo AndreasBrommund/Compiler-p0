@@ -66,7 +66,9 @@ object Main {
     if(ctx.doTokens){
       displayTokens(tokenIterator)
     }
-    // TODO: run lexer phase
+
+    Reporter.terminateIfErrors()
+
   }
 
 }
