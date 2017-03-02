@@ -3,6 +3,7 @@ package punkt0
 import java.io.File
 
 import lexer._
+import ast._
 
 
 object Main {
@@ -21,6 +22,10 @@ object Main {
 
       case "--tokens" :: args =>
         ctx = ctx.copy(doTokens = true)
+        processOption(args)
+
+      case "--ast" :: args =>
+        ctx = ctx.copy(doAST = true)
         processOption(args)
 
       case f :: args =>
@@ -52,7 +57,6 @@ object Main {
       val token = tokenIterator.next
       printf("%s(%d:%d)\n",token,token.line,token.column)
     }
-
   }
 
   def main(args: Array[String]): Unit = {
@@ -63,9 +67,13 @@ object Main {
       case None => sys.error("No file")//TODO Handle error
     }
 
-    if(ctx.doTokens){
+
+    if(ctx.doTokens)
       displayTokens(tokenIterator)
-    }
+    else if(ctx.doAST)
+      print(Parser.run(tokenIterator)(ctx))
+
+
 
     Reporter.terminateIfErrors()
 

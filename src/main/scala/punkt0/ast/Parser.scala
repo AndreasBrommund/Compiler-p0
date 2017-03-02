@@ -33,11 +33,29 @@ object Parser extends Phase[Iterator[Token], Program] {
 
     /** Complains that what was found was not expected. The method accepts arbitrarily many arguments of type TokenKind */
     def expected(kind: TokenKind, more: TokenKind*): Nothing = {
-      fatal("expected: " + (kind::more.toList).mkString(" or ") + ", found: " + currentToken, currentToken)
+      fatal("expected: " + (kind :: more.toList).mkString(" or ") + ", found: " + currentToken, currentToken)
     }
 
+    //Program ::=
     def parseGoal: Program = {
       ???
+    }
+
+    //Type ::=
+    def parseType: TypeTree = {
+      currentToken.kind match {
+        case BOOLEAN => new BooleanType
+        case INT => new IntType
+        case STRING => new StringType
+        case UNIT => new UnitType
+        case _ => parseIdent
+      }
+    }
+
+    //Identifier ::=
+    def parseIdent: Identifier = currentToken match {
+      case id: ID => new Identifier(id.value)
+      case _ => expected(IDKIND)
     }
 
     readToken
