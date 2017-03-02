@@ -4,6 +4,8 @@ package ast
 import Trees._
 import lexer._
 
+import scala.collection.mutable.ListBuffer
+
 object Parser extends Phase[Iterator[Token], Program] {
   def run(tokens: Iterator[Token])(ctx: Context): Program = {
     import Reporter._
@@ -38,11 +40,47 @@ object Parser extends Phase[Iterator[Token], Program] {
 
     //Program ::=
     def parseGoal: Program = {
+      var classes = new ListBuffer[ClassDecl]
+      while (currentToken.kind == CLASS) {
+        classes += parseClassDeclaration
+      }
+      new Program(parseMainDeclaration, classes.toList)
+    }
+
+    //ClassDeclaration ::=
+    def parseClassDeclaration: ClassDecl = {
+      ???
+    }
+
+    //MainDeclaration ::=
+    def parseMainDeclaration: MainMethod = {
+      eat(OBJECT)
+      val obj = parseIdent
+      eat(EXTENDS)
+      val parent = parseIdent
+      eat(LBRACE)
+
+      val varDecls = new ListBuffer[VarDecl]
+      //TODO Add decls to the list
+      var exprs = new ListBuffer[ExprTree]
+      //TODO Add exprs to the list
+
+
+      val main = new MethodDecl(
+        false, new UnitType, new Identifier("Main"), List(),
+        varDecls.toList, exprs.init.toList, exprs.last)
+      eat(RBRACE)
+      new MainMethod(obj, parent, main)
+    }
+
+    //VarDeclaration ::=
+    def parseVarDeclaration: VarDecl = {
       ???
     }
 
     //Type ::=
     def parseType: TypeTree = {
+      //TODO maybe read token
       currentToken.kind match {
         case BOOLEAN => new BooleanType
         case INT => new IntType
