@@ -179,7 +179,6 @@ object Parser extends Phase[Iterator[Token], Program] {
     //Expression ::=
     def parseExpression: ExprTree = {
       val exprTree = parseExpressionOr
-      readToken
       exprTree
     }
 
@@ -206,6 +205,7 @@ object Parser extends Phase[Iterator[Token], Program] {
       }
     }
 
+
     //Expression compare
     def parseExpressionCompare: ExprTree = {
       val termExpr = parseExpressionTerm
@@ -223,6 +223,7 @@ object Parser extends Phase[Iterator[Token], Program] {
     //Expression term
     def parseExpressionTerm: ExprTree = {
       val factorExpr = parseExpressionFactor
+      
       if(currentToken.kind == PLUS){
         eat(PLUS)
         new Plus(factorExpr,parseExpressionFactor)
