@@ -178,15 +178,181 @@ object Parser extends Phase[Iterator[Token], Program] {
 
     //Expression ::=
     def parseExpression: ExprTree = {
-      //TODO FIX
-      val exprTree = currentToken.kind match {
-        case TRUE => new True
-        case FALSE => new False
-        case _ => expected(TRUE,FALSE) //TODO Fix
-      }
+      val exprTree = parseExpressionOr
       readToken
       exprTree
     }
+
+
+    //Expression or
+    def parseExpressionOr: ExprTree = {
+      val andExpr = parseExpressionAnd
+      if(currentToken.kind == OR){
+        eat(OR)
+        new Or(andExpr,parseExpressionAnd)
+      }else{
+        andExpr
+      }
+    }
+
+    //Expression and
+    def parseExpressionAnd: ExprTree = {
+      val compExpr = parseExpressionCompare
+      if(currentToken.kind == AND){
+        eat(AND)
+        new And(compExpr,parseExpressionCompare)
+      }else{
+        compExpr
+      }
+    }
+
+    //Expression compare
+    def parseExpressionCompare: ExprTree = {
+      val termExpr = parseExpressionTerm
+      if(currentToken.kind == LESSTHAN){
+        eat(LESSTHAN)
+        new LessThan(termExpr,parseExpressionTerm)
+      }else if(currentToken.kind == EQUALS){
+        eat(EQUALS)
+        new Equals(termExpr,parseExpressionTerm)
+      }else {
+        termExpr
+      }
+    }
+
+    //Expression term
+    def parseExpressionTerm: ExprTree = {
+      val factorExpr = parseExpressionFactor
+      if(currentToken.kind == PLUS){
+        eat(PLUS)
+        new Plus(factorExpr,parseExpressionFactor)
+      }else if(currentToken.kind == MINUS){
+        eat(MINUS)
+        new Minus(factorExpr,parseExpressionFactor)
+      }else{
+        factorExpr
+      }
+    }
+
+    //Expression factor
+    def parseExpressionFactor: ExprTree = {
+      val notExpr = parseExpressionNot
+      if(currentToken.kind == TIMES){
+        eat(TIMES)
+        new Times(notExpr,parseExpressionNot)
+      }else if(currentToken.kind == DIV){
+        eat(DIV)
+        new Div(notExpr,parseExpressionNot)
+      }else{
+        notExpr
+      }
+    }
+
+    //Expression not
+    def parseExpressionNot: ExprTree = {
+      if(currentToken.kind == BANG){
+        eat(BANG)
+        new Not(parseExpressionOverall)
+      }else{
+        parseExpressionOverall
+      }
+    }
+
+    def parseExpressionOverall : ExprTree = {
+      currentToken match {
+        case id: INTLIT =>
+          readToken
+          new IntLit(id.value)
+        case id: STRLIT =>
+          readToken
+          new StringLit(id.value)
+        case id  =>
+          id.kind match {
+            case TRUE  =>
+              eat(TRUE)
+              new True
+            case FALSE =>
+              eat(FALSE)
+              new False
+            case IDKIND =>
+              val ident = parseIdent
+              if(currentToken.kind == EQSIGN){
+                eat(EQSIGN)
+                new Assign(ident,parseExpression)
+              }else{
+                ident
+              }
+            case THIS =>
+              eat(THIS)
+              new This
+            case NULL =>
+              eat(NULL)
+              new Null
+            case NEW =>
+              eat(NEW)
+              val ret = new New(parseIdent)
+              eat(LPAREN)
+              eat(RPAREN)
+              ret;
+            case LPAREN =>
+              eat(LPAREN)
+              val ret = parseExpression
+              eat(RPAREN)
+              ret
+            case LBRACE =>
+              eat(LPAREN)
+              if(currentToken.kind != RBRACE){
+                val ret = new Block(parseExpressionBlock)
+                eat(RBRACE)
+                ret
+              }else{
+                eat(RBRACE)
+                new Block(List())
+              }
+            case IF =>
+              eat(LPAREN)
+              val condition = parseExpression
+              eat(RPAREN)
+              val ifBody = parseExpression
+              var elseBody: Option[ExprTree] = None
+
+              if(currentToken.kind == ELSE){
+                eat(ELSE)
+                elseBody = Some(parseExpression)
+              }
+
+              new If(condition,ifBody,elseBody)
+            case WHILE =>
+              eat(WHILE)
+              eat(LPAREN)
+              val condition = parseExpression
+              eat(RPAREN)
+              val body = parseExpression
+              new While(condition,body)
+            case PRINTLN =>
+              eat(PRINTLN)
+              eat(LPAREN)
+              val expr = parseExpression
+              eat(RPAREN)
+              new Println(expr)
+            case _ =>
+              val obj = parseExpression
+              eat(DOT)
+              val method = parseIdent
+              eat(LPAREN)
+
+              var args = new ListBuffer[ExprTree]
+              args += parseExpression
+              while(currentToken.kind == COLON){
+                eat(COLON)
+                args += parseExpression
+              }
+              eat(RPAREN)
+              new MethodCall(obj,method,args.toList)
+          }
+      }
+    }
+
 
     def parseExpressionBlock : List[ExprTree] = {
       var exprs = new ListBuffer[ExprTree]
