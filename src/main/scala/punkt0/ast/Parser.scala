@@ -47,7 +47,7 @@ object Parser extends Phase[Iterator[Token], Program] {
       val mainDecl = parseMainDeclaration
       eat(EOF)
 
-      new Program(mainDecl,classes.toList)
+      new Program(mainDecl, classes.toList)
     }
 
     //ClassDeclaration ::=
@@ -56,8 +56,8 @@ object Parser extends Phase[Iterator[Token], Program] {
       val className = parseIdent
 
       //Extends
-      var extendsName : Option[Identifier] = None
-      if(currentToken.kind == EXTENDS){
+      var extendsName: Option[Identifier] = None
+      if (currentToken.kind == EXTENDS) {
         eat(EXTENDS)
         extendsName = Some(parseIdent)
       }
@@ -72,7 +72,7 @@ object Parser extends Phase[Iterator[Token], Program] {
         methods += parseMethodDeclaration
 
       eat(RBRACE)
-      new ClassDecl(className,extendsName,vars.toList,methods.toList)
+      new ClassDecl(className, extendsName, vars.toList, methods.toList)
     }
 
     //MainDeclaration ::=
@@ -100,12 +100,12 @@ object Parser extends Phase[Iterator[Token], Program] {
       eat(EQSIGN)
       val varExpr = parseExpression
       eat(SEMICOLON)
-      new VarDecl(varType,varName,varExpr)
+      new VarDecl(varType, varName, varExpr)
     }
 
     def parseVarDeclarationBlock: List[VarDecl] = {
       var vars = new ListBuffer[VarDecl]
-      while(currentToken.kind == VAR)
+      while (currentToken.kind == VAR)
         vars += parseVarDeclaration
       vars.toList
     }
@@ -116,7 +116,7 @@ object Parser extends Phase[Iterator[Token], Program] {
 
       currentToken.kind match {
         case OVERRIDE => overrides = true; readToken; eat(DEF)
-        case DEF => readToken
+        case DEF => eat(DEF)
         case _ => expected(OVERRIDE, DEF)
       }
 
@@ -138,7 +138,7 @@ object Parser extends Phase[Iterator[Token], Program] {
         }
 
         parseFormal //Get the first required argument
-        while (currentToken.kind == COMMA){
+        while (currentToken.kind == COMMA) {
           eat(COMMA)
           parseFormal
         }
@@ -158,108 +158,130 @@ object Parser extends Phase[Iterator[Token], Program] {
 
       eat(RBRACE)
 
-      new MethodDecl(overrides,returnType,methodName,
-        arguments.toList,vars,exprs.init,exprs.last)
+      new MethodDecl(overrides, returnType, methodName,
+        arguments.toList, vars, exprs.init, exprs.last)
 
     }
 
     //Type ::=
-    def parseType: TypeTree = {
-      val typeTree = currentToken.kind match {
-        case BOOLEAN => new BooleanType
-        case INT => new IntType
-        case STRING => new StringType
-        case UNIT => new UnitType
+    def parseType: TypeTree = currentToken.kind match {
+        case BOOLEAN => eat(BOOLEAN); new BooleanType
+        case INT => eat(INT); new IntType
+        case STRING => eat(STRING); new StringType
+        case UNIT => eat(UNIT); new UnitType
         case _ => parseIdent
-      }
-      readToken
-      typeTree
     }
 
     //Expression ::=
-    def parseExpression: ExprTree = {
-      val exprTree = parseExpressionOr
-      exprTree
+    def parseExpression: ExprTree = parseExpressionOr
+
+    def parseExpressionMethodCall: ExprTree = {
+      var obj = parseExpressionOverall
+      while(currentToken.kind == DOT){
+        eat(DOT)
+        val method = parseIdent
+        eat(LPAREN)
+
+        var args = new ListBuffer[ExprTree]
+        if(currentToken.kind != RPAREN) {
+          args += parseExpression
+          while (currentToken.kind == COMMA) {
+            eat(COMMA)
+            args += parseExpression
+          }
+        }
+        eat(RPAREN)
+        obj = new MethodCall(obj, method, args.toList)
+      }
+      obj
     }
+
+
+
+
 
 
     //Expression or
     def parseExpressionOr: ExprTree = {
-      val andExpr = parseExpressionAnd
-      if(currentToken.kind == OR){
+      var andExpr = parseExpressionAnd
+      while (currentToken.kind == OR) {
         eat(OR)
-        new Or(andExpr,parseExpressionAnd)
-      }else{
-        andExpr
+        andExpr = new Or(andExpr, parseExpressionAnd)
       }
+      andExpr
     }
 
     //Expression and
     def parseExpressionAnd: ExprTree = {
-      val compExpr = parseExpressionCompare
-      if(currentToken.kind == AND){
+      var compExpr = parseExpressionCompare
+      while (currentToken.kind == AND) {
         eat(AND)
-        new And(compExpr,parseExpressionCompare)
-      }else{
-        compExpr
+        compExpr = new And(compExpr, parseExpressionCompare)
       }
+      compExpr
     }
 
 
     //Expression compare
     def parseExpressionCompare: ExprTree = {
-      val termExpr = parseExpressionTerm
-      if(currentToken.kind == LESSTHAN){
-        eat(LESSTHAN)
-        new LessThan(termExpr,parseExpressionTerm)
-      }else if(currentToken.kind == EQUALS){
-        eat(EQUALS)
-        new Equals(termExpr,parseExpressionTerm)
-      }else {
-        termExpr
+      var termExpr = parseExpressionTerm
+      while (currentToken.kind == LESSTHAN || currentToken.kind == EQUALS) {
+        if (currentToken.kind == LESSTHAN) {
+          eat(LESSTHAN)
+          termExpr = new LessThan(termExpr, parseExpressionTerm)
+        } else {
+          //currentToken.kind == EQUALS
+          eat(EQUALS)
+          termExpr = new Equals(termExpr, parseExpressionTerm)
+        }
       }
+      termExpr
     }
 
     //Expression term
     def parseExpressionTerm: ExprTree = {
-      val factorExpr = parseExpressionFactor
-      
-      if(currentToken.kind == PLUS){
-        eat(PLUS)
-        new Plus(factorExpr,parseExpressionFactor)
-      }else if(currentToken.kind == MINUS){
-        eat(MINUS)
-        new Minus(factorExpr,parseExpressionFactor)
-      }else{
-        factorExpr
+      var factorExpr = parseExpressionFactor
+      while (currentToken.kind == PLUS || currentToken.kind == MINUS) {
+        if (currentToken.kind == PLUS) {
+          eat(PLUS)
+          factorExpr = new Plus(factorExpr, parseExpressionFactor)
+        } else {
+          //currentToken.kind == MINUS
+          eat(MINUS)
+          factorExpr = new Minus(factorExpr, parseExpressionFactor)
+        }
       }
+      factorExpr
     }
 
     //Expression factor
     def parseExpressionFactor: ExprTree = {
-      val notExpr = parseExpressionNot
-      if(currentToken.kind == TIMES){
-        eat(TIMES)
-        new Times(notExpr,parseExpressionNot)
-      }else if(currentToken.kind == DIV){
-        eat(DIV)
-        new Div(notExpr,parseExpressionNot)
-      }else{
-        notExpr
+      var notExpr = parseExpressionNot
+      while (currentToken.kind == TIMES || currentToken.kind == DIV) {
+        if (currentToken.kind == TIMES) {
+          eat(TIMES)
+          notExpr = new Times(notExpr, parseExpressionNot)
+        } else {
+          //currentToken.kind == DIV
+          eat(DIV)
+          notExpr = new Div(notExpr, parseExpressionNot)
+        }
       }
+      notExpr
+
     }
 
     //Expression not
     def parseExpressionNot: ExprTree = {
-      if(currentToken.kind == BANG){
+      if (currentToken.kind == BANG) {
         eat(BANG)
-        new Not(parseExpressionOverall)
-      }else{
-        parseExpressionOverall
+        new Not(parseExpressionNot)
+      } else {
+        parseExpressionMethodCall
       }
     }
 
-    def parseExpressionOverall : ExprTree = {
+    def parseExpressionOverall: ExprTree = {
       currentToken match {
         case id: INTLIT =>
           readToken
@@ -267,9 +289,9 @@ object Parser extends Phase[Iterator[Token], Program] {
         case id: STRLIT =>
           readToken
           new StringLit(id.value)
-        case id  =>
+        case id =>
           id.kind match {
-            case TRUE  =>
+            case TRUE =>
               eat(TRUE)
               new True
             case FALSE =>
@@ -277,10 +299,10 @@ object Parser extends Phase[Iterator[Token], Program] {
               new False
             case IDKIND =>
               val ident = parseIdent
-              if(currentToken.kind == EQSIGN){
+              if (currentToken.kind == EQSIGN) {
                 eat(EQSIGN)
-                new Assign(ident,parseExpression)
-              }else{
+                new Assign(ident, parseExpression)
+              } else {
                 ident
               }
             case THIS =>
@@ -301,64 +323,51 @@ object Parser extends Phase[Iterator[Token], Program] {
               eat(RPAREN)
               ret
             case LBRACE =>
-              eat(LPAREN)
-              if(currentToken.kind != RBRACE){
+              eat(LBRACE)
+              if (currentToken.kind != RBRACE) {
                 val ret = new Block(parseExpressionBlock)
                 eat(RBRACE)
                 ret
-              }else{
+              } else {
                 eat(RBRACE)
                 new Block(List())
               }
             case IF =>
+              eat(IF)
               eat(LPAREN)
               val condition = parseExpression
               eat(RPAREN)
               val ifBody = parseExpression
               var elseBody: Option[ExprTree] = None
 
-              if(currentToken.kind == ELSE){
+              if (currentToken.kind == ELSE) {
                 eat(ELSE)
                 elseBody = Some(parseExpression)
               }
 
-              new If(condition,ifBody,elseBody)
+              new If(condition, ifBody, elseBody)
             case WHILE =>
               eat(WHILE)
               eat(LPAREN)
               val condition = parseExpression
               eat(RPAREN)
               val body = parseExpression
-              new While(condition,body)
+              new While(condition, body)
             case PRINTLN =>
               eat(PRINTLN)
               eat(LPAREN)
               val expr = parseExpression
               eat(RPAREN)
               new Println(expr)
-            case _ =>
-              val obj = parseExpression
-              eat(DOT)
-              val method = parseIdent
-              eat(LPAREN)
-
-              var args = new ListBuffer[ExprTree]
-              args += parseExpression
-              while(currentToken.kind == COLON){
-                eat(COLON)
-                args += parseExpression
-              }
-              eat(RPAREN)
-              new MethodCall(obj,method,args.toList)
+            case _ => fatal("expected: expression, found: " + currentToken, currentToken)
           }
       }
     }
 
-
-    def parseExpressionBlock : List[ExprTree] = {
+    def parseExpressionBlock: List[ExprTree] = {
       var exprs = new ListBuffer[ExprTree]
       exprs += parseExpression
-      while(currentToken.kind == SEMICOLON){
+      while (currentToken.kind == SEMICOLON) {
         eat(SEMICOLON)
         exprs += parseExpression
       }
@@ -367,8 +376,8 @@ object Parser extends Phase[Iterator[Token], Program] {
 
     //Identifier ::=
     def parseIdent: Identifier = currentToken match {
-        case id: ID => readToken;new Identifier(id.value)
-        case _ => expected(IDKIND)
+      case id: ID => readToken; new Identifier(id.value)
+      case _ => expected(IDKIND)
     }
 
     readToken
