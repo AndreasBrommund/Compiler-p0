@@ -7,7 +7,6 @@ import ast._
 
 
 object Main {
-
   def processOptions(args: Array[String]): Context = {
     var ctx = Context()
 
@@ -26,6 +25,10 @@ object Main {
 
       case "--ast" :: args =>
         ctx = ctx.copy(doAST = true)
+        processOption(args)
+
+      case "--print" :: args =>
+        ctx = ctx.copy(doPrintMain = true)
         processOption(args)
 
       case f :: args =>
@@ -49,33 +52,36 @@ object Main {
     println("Usage: <punkt0c> [options] <file>")
     println("Options include:")
     println(" --help        displays this help")
+    println(" --tokens      print tokens")
+    println(" --ast         print abstract syntax tree")
+    println(" --print       pritty-print")
     println(" -d <outdir>   generates class files in the specified directory")
-  }
-
-  def displayTokens(tokenIterator: Iterator[Token]) : Unit = {
-    while(tokenIterator.hasNext) {
-      val token = tokenIterator.next
-      printf("%s(%d:%d)\n",token,token.line,token.column)
-    }
   }
 
   def main(args: Array[String]): Unit = {
     val ctx = processOptions(args)
 
-    val tokenIterator = ctx.file match {
-      case Some(file) => Lexer.run(file)(ctx)
-      case None => sys.error("No file")//TODO Handle error
+    if(ctx.file.isEmpty) {
+      sys.error("No file")
+    }else if(ctx.doTokens){
+      val tokenIterator = Lexer.run(ctx.file.get)(ctx)
+      while(tokenIterator.hasNext) {
+        val token = tokenIterator.next
+        printf("%s(%d:%d)\n",token,token.line,token.column)
+      }
+      Reporter.terminateIfErrors()
+    } else if(ctx.doAST) {
+      val phase = Lexer.andThen(Parser)
+      val ast = phase.run(ctx.file.get)(ctx)
+      print(ast)
+    } else if(ctx.doPrintMain){
+      val phase = Lexer.andThen(Parser)
+      val ast = phase.run(ctx.file.get)(ctx)
+      print(Printer.apply(ast))
     }
 
 
-    if(ctx.doTokens)
-      displayTokens(tokenIterator)
-    else if(ctx.doAST)
-      print(Parser.run(tokenIterator)(ctx))
 
-
-
-    Reporter.terminateIfErrors()
 
   }
 
