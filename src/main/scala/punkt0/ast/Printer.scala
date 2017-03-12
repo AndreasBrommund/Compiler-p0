@@ -16,69 +16,80 @@ object Printer {
         node.classes.foreach(n => getPrettyString(n, sb))
         getPrettyString(node.main, sb)
       case node: MainDecl =>
-        sb.append("object ")
+        sb.append(" object ")
         getPrettyString(node.obj, sb)
         sb.append(" extends ")
         getPrettyString(node.parent, sb)
-        sb.append("{")
+        sb.append(" {\n")
         node.vars.foreach(n => getPrettyString(n, sb))
         getPrettyString(node.exprs.head, sb)
         node.exprs.tail.foreach(n => {
-          sb.append(";"); getPrettyString(n, sb)
+          sb.append(";\n"); getPrettyString(n, sb)
         })
-        sb.append("}")
+        sb.append("\n}\n")
       case node: ClassDecl =>
-        sb.append("class ")
+        sb.append(" class ")
         getPrettyString(node.id,sb)
         if(node.parent.isDefined){
           sb.append(" extends ")
           getPrettyString(node.parent.get,sb)
         }
-        sb.append("{")
+        sb.append(" {\n")
         node.vars.foreach(n => getPrettyString(n, sb))
         node.methods.foreach(n => {
-          sb.append(" "); getPrettyString(n, sb)
+          sb.append("\n"); getPrettyString(n, sb)
         })
-        sb.append("}")
+        sb.append("\n}\n")
       case node: VarDecl =>
-        sb.append("var ")
+        sb.append(" var ")
         getPrettyString(node.id, sb)
-        sb.append(":")
+        sb.append(" : ")
         getPrettyString(node.tpe, sb)
         sb.append("=")
         getPrettyString(node.expr, sb)
-        sb.append(";")
+        sb.append(";\n")
       case node: MethodDecl =>
         if(node.overrides){
-          sb.append("override ")
+          sb.append(" override ")
         }
-        sb.append("def ")
+        sb.append(" def ")
         getPrettyString(node.id,sb)
         sb.append(" (")
         if (node.args.nonEmpty) {
           getPrettyString(node.args.head, sb)
           node.args.tail.foreach(n => {sb.append(","); getPrettyString(n, sb)})
         }
-        sb.append("):")
+        sb.append("): ")
         getPrettyString(node.retType,sb)
-        sb.append(" = {")
+        sb.append(" = {\n")
         node.vars.foreach(n => getPrettyString(n, sb))
         if(node.exprs.nonEmpty){
           getPrettyString(node.exprs.head, sb)
-          node.exprs.tail.foreach(n => {sb.append(";"); getPrettyString(n, sb)})
-          sb.append(";")
+          node.exprs.tail.foreach(n => {sb.append(";\n"); getPrettyString(n, sb)})
+          sb.append(";\n")
         }
         getPrettyString(node.retExpr,sb)
+        sb.append("\n}\n")
       case node: Formal =>
         getPrettyString(node.id,sb)
-        sb.append(":")
+        sb.append(" : ")
         getPrettyString(node.tpe,sb)
-      case node: BooleanType => sb.append("Boolean")
-      case node: IntType => sb.append("Int")
-      case node: StringType => sb.append("String")
-      case node: UnitType => sb.append("Unit")
-      case node: And => sb.append("&&")
-      case node: Or => sb.append("||")
+      case node: BooleanType => sb.append(" Boolean ")
+      case node: IntType => sb.append(" Int ")
+      case node: StringType => sb.append(" String ")
+      case node: UnitType => sb.append(" Unit ")
+      case node: And =>
+        sb.append("(")
+        getPrettyString(node.lhs,sb)
+        sb.append("&&")
+        getPrettyString(node.rhs,sb)
+        sb.append(")")
+      case node: Or =>
+        sb.append("(")
+        getPrettyString(node.lhs,sb)
+        sb.append("||")
+        getPrettyString(node.rhs,sb)
+        sb.append(")")
       case node: Plus =>
         sb.append("(")
         getPrettyString(node.lhs, sb)
@@ -119,21 +130,24 @@ object Printer {
         getPrettyString(node.obj,sb)
         sb.append(".")
         getPrettyString(node.meth,sb)
-        sb.append("(")
+        sb.append(" (")
         if (node.args.nonEmpty) {
           getPrettyString(node.args.head, sb)
           node.args.tail.foreach(n => {sb.append(","); getPrettyString(n, sb)})
         }
         sb.append(")")
       case node: IntLit => sb.append(node.value)
-      case node: StringLit => sb.append(node.value)
-      case node: True => sb.append("true")
-      case node: False => sb.append("false")
+      case node: StringLit =>
+        sb.append("\"")
+        sb.append(node.value)
+        sb.append("\"")
+      case node: True => sb.append(" true ")
+      case node: False => sb.append(" false ")
       case node: Identifier => sb.append(node.value)
-      case node: This => sb.append("this")
-      case node: Null => sb.append("null")
+      case node: This => sb.append(" this ")
+      case node: Null => sb.append(" null ")
       case node: New =>
-        sb.append("new ")
+        sb.append(" new ")
         getPrettyString(node.tpe, sb)
         sb.append("()")
       case node: Not =>
@@ -141,32 +155,28 @@ object Printer {
         getPrettyString(node.expr, sb)
         sb.append(")")
       case node: Block =>
-        sb.append("{")
+        sb.append("\n{\n")
         if (node.exprs.nonEmpty) {
           getPrettyString(node.exprs.head, sb)
-          node.exprs.tail.foreach(n => {sb.append(";"); getPrettyString(n, sb)})
+          node.exprs.tail.foreach(n => {sb.append(";\n"); getPrettyString(n, sb)})
         }
-        sb.append("}")
+        sb.append("\n}\n")
       case node: If =>
-        sb.append("if (")
+        sb.append(" if(")
         getPrettyString(node.expr,sb)
-        sb.append(")")
-        sb.append("{")
+        sb.append(") ")
         getPrettyString(node.thn,sb)
-        sb.append("}")
         if(node.els.isDefined){
-          sb.append("else")
-          sb.append("{")
+          sb.append(" else ")
           getPrettyString(node.els.get,sb)
-          sb.append("}")
         }
       case node: While =>
-        sb.append("while (")
+        sb.append(" while(")
         getPrettyString(node.cond,sb)
-        sb.append(")")
+        sb.append(")\n")
         getPrettyString(node.body,sb)
       case node: Println =>
-        sb.append("println (")
+        sb.append(" println(")
         getPrettyString(node.expr,sb)
         sb.append(")")
       case node: Assign =>

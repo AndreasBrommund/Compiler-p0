@@ -19,6 +19,26 @@
 #    fi
 #done
 
+echo "Test valid pretty-print lab3"
+for f in testprograms/lab3/valid/*.p0
+do
+    AST=${f}.ast
+    echo "$f -> $AST"
+    sbt "run --print $f" > /dev/null 2> res.p0
+    sbt "run --ast res.p0" > /dev/null 2> res.p0.ast
+    DIFF=$(diff res.p0.ast $AST)
+    crc32 res.p0.ast
+    head -c 90 res.p0.ast
+    echo ""
+    if [ "$DIFF" != "" ]
+    then
+
+        echo "Fail $f"
+        diff res.p0.ast $AST
+        exit
+    fi
+done
+
 echo "Test invalid lab3"
 for f in testprograms/lab3/invalid/*.p0
 do
