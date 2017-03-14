@@ -32,7 +32,7 @@ do
 
     DIFF=$(diff res.p0 ans.p0 )
     crc32 ans.p0
-    head -c 90 ans.p0
+    #head -c 90 ans.p0
     echo ""
     if [ "$DIFF" != "" ]
     then
@@ -49,13 +49,13 @@ do
     echo "$f"
     scala "-cp target/scala-2.11/classes/ punkt0.Main --ast $f" > res.p0.ast
 
-    if [ "$?" == "0" ]
+    if [ "$?" != "1" ]
     then
         echo "Fail $f"
         exit
     fi
     crc32 res.p0.ast
-    head -c 100 res.p0.ast
+    #head -c 100 res.p0.ast
     echo ""
 done
 
@@ -67,7 +67,7 @@ do
     scala "-cp target/scala-2.11/classes/ punkt0.Main --ast $f" > res.p0.ast
     DIFF=$(diff res.p0.ast $AST)
     crc32 res.p0.ast
-    head -c 90 res.p0.ast
+    #head -c 90 res.p0.ast
     echo ""
     if [ "$DIFF" != "" ]
     then
