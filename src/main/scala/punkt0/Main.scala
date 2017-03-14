@@ -73,16 +73,11 @@ object Main {
     } else if(ctx.doAST) {
       val phase = Lexer.andThen(Parser)
       val ast = phase.run(ctx.file.get)(ctx)
-      print(ast)
+      println(ast)
     } else if(ctx.doPrintMain){
       val phase = Lexer.andThen(Parser)
       val ast = phase.run(ctx.file.get)(ctx)
-      print(Printer.apply(ast))
+      println(Printer.apply(ast))
     }
-
-
-
-
   }
-
 }
