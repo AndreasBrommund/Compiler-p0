@@ -27,8 +27,8 @@ for f in testprograms/lab3/valid/*.p0
 do
     AST=${f}.ast
     echo "$f -> $AST"
-    scala "-cp target/scala-2.11/classes/ punkt0.Main --print $f" > res.p0
-    scala "-cp target/scala-2.11/classes/ punkt0.Main --print res.p0" > ans.p0
+    scala -cp target/scala-2.11/classes/ punkt0.Main --print $f > res.p0
+    scala -cp target/scala-2.11/classes/ punkt0.Main --print res.p0 > ans.p0
 
     DIFF=$(diff res.p0 ans.p0 )
     crc32 ans.p0
@@ -47,7 +47,7 @@ echo "Test invalid lab3"
 for f in testprograms/lab3/invalid/*.p0
 do
     echo "$f"
-    scala "-cp target/scala-2.11/classes/ punkt0.Main --ast $f" > res.p0.ast
+    scala -cp target/scala-2.11/classes/ punkt0.Main --ast $f > res.p0.ast
 
     if [ "$?" != "1" ]
     then
@@ -64,7 +64,7 @@ for f in testprograms/lab3/valid/*.p0
 do
     AST=${f}.ast
     echo "$f -> $AST"
-    scala "-cp target/scala-2.11/classes/ punkt0.Main --ast $f" > res.p0.ast
+    scala -cp target/scala-2.11/classes/ punkt0.Main --ast $f > res.p0.ast
     DIFF=$(diff res.p0.ast $AST)
     crc32 res.p0.ast
     #head -c 90 res.p0.ast
