@@ -61,20 +61,14 @@ object Lexer extends Phase[File, Iterator[Token]] {
         case digit if digit.isDigit =>
           var integer = digit.asDigit
 
-          if(nextChar.isDefined && nextChar.get.isDigit && nextChar.get == '0' && integer == 0){
-            val res = handleBad("Can't have a integer with leading zeros", pos, nextChar, f, source)
-            nextChar = res._2
-            pos = res._3
-            res._1 //Token
-          }else {
-
+          if(integer != 0){
             while (nextChar.isDefined && nextChar.get.isDigit) {
               integer = integer * 10 + nextChar.get.asDigit
               nextChar = getNextChar(source)
             }
 
-            new INTLIT(integer)
           }
+          new INTLIT(integer)
 
         case alfa if alfa.isLetter =>
           val buffer = new StringBuilder
