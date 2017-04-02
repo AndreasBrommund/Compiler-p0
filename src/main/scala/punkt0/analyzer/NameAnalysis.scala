@@ -1,6 +1,7 @@
 package punkt0
 package analyzer
 
+import ast.Trees._
 import Symbols._
 
 object NameAnalysis extends Phase[Program, Program] {

@@ -1,7 +1,7 @@
-package punkt0.ast
+package punkt0
+package ast
 
-import punkt0.Positioned
-import punkt0.analyzer.Symbols._
+import analyzer.Symbols._
 
 object Trees {
   sealed trait Tree extends Positioned
