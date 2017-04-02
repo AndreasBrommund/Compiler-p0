@@ -6,7 +6,7 @@ object Symbols {
   trait Symbolic[S <: Symbol] {
     private var _sym: Option[S] = None
 
-    def setSymbol(sym: S): this.type = {
+    def setSymbol(sym: S): this.type = { //TODO Start to use this
       _sym = Some(sym)
       this
     }
