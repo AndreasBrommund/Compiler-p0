@@ -2,10 +2,15 @@ package punkt0
 package ast
 
 import Trees._
+import analyzer.Symbols._
 
 object Printer {
-  def apply(t: Tree): String = {
+
+  var doSymId = false
+
+  def apply(t: Tree, doSymId: Boolean): String = {
     val sb = new StringBuilder
+    this.doSymId = doSymId
     getPrettyString(t,sb)
     sb.toString
   }
@@ -18,6 +23,7 @@ object Printer {
       case node: MainDecl =>
         sb.append(" object ")
         getPrettyString(node.obj, sb)
+        addId(node.getSymbol,sb)
         sb.append(" extends ")
         getPrettyString(node.parent, sb)
         sb.append(" {\n")
@@ -30,6 +36,7 @@ object Printer {
       case node: ClassDecl =>
         sb.append(" class ")
         getPrettyString(node.id,sb)
+        addId(node.getSymbol,sb)
         if(node.parent.isDefined){
           sb.append(" extends ")
           getPrettyString(node.parent.get,sb)
@@ -54,6 +61,7 @@ object Printer {
         }
         sb.append(" def ")
         getPrettyString(node.id,sb)
+        addId(node.getSymbol,sb)
         sb.append(" (")
         if (node.args.nonEmpty) {
           getPrettyString(node.args.head, sb)
@@ -72,6 +80,7 @@ object Printer {
         sb.append("\n}\n")
       case node: Formal =>
         getPrettyString(node.id,sb)
+
         sb.append(" : ")
         getPrettyString(node.tpe,sb)
       case node: BooleanType => sb.append(" Boolean ")
@@ -185,5 +194,10 @@ object Printer {
         getPrettyString(node.expr,sb)
       case _ => Reporter.fatal("Wring node type in tree",branch)
     }
+  }
+  def addId(symbol: Symbol,sb: StringBuilder): Unit ={
+    if (doSymId)
+      sb.append("#"+symbol.id)
+
   }
 }

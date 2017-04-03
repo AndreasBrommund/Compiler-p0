@@ -4,6 +4,7 @@ import java.io.File
 
 import lexer._
 import ast._
+import analyzer._
 
 
 object Main {
@@ -29,6 +30,10 @@ object Main {
 
       case "--print" :: args =>
         ctx = ctx.copy(doPrintMain = true)
+        processOption(args)
+
+      case "--symid" :: args =>
+        ctx = ctx.copy(doSymbolIds =  true)
         processOption(args)
 
       case f :: args =>
@@ -74,10 +79,10 @@ object Main {
       val phase = Lexer.andThen(Parser)
       val ast = phase.run(ctx.file.get)(ctx)
       println(ast)
-    } else if(ctx.doPrintMain){
-      val phase = Lexer.andThen(Parser)
+    } else if(ctx.doPrintMain || ctx.doSymbolIds){
+      val phase = Lexer.andThen(Parser).andThen(NameAnalysis)
       val ast = phase.run(ctx.file.get)(ctx)
-      println(Printer.apply(ast))
+      println(Printer.apply(ast,ctx.doSymbolIds))
     }
   }
 }

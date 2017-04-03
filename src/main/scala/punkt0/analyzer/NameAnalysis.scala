@@ -35,6 +35,9 @@ object NameAnalysis extends Phase[Program, Program] {
     joinClassVariableSymbols(program.main.vars,mainClassSymbol)
 
     globalScope.mainClass = mainClassSymbol
+
+    program.main.setSymbol(mainClassSymbol)
+
     //Handle all classes
 
     for(c <- program.classes){
@@ -48,6 +51,8 @@ object NameAnalysis extends Phase[Program, Program] {
           joinClassMethodsSymbols(c.methods,classSymbol)
 
           globalScope.classes += (classSymbol.name -> classSymbol)
+
+          c.setSymbol(classSymbol)
       }
 
       mainClassSymbol.members.updated("s",joinClassVariableSymbols(program.main.vars,mainClassSymbol))
@@ -79,7 +84,7 @@ object NameAnalysis extends Phase[Program, Program] {
         case Some(sym) => Reporter.error("Method '"+method.id.value+"' is already declared at position: "+sym.posString,method)
         case None =>
           val methodSymbol = new MethodSymbol(method.id.value,classSymbol).setPos(method)
-
+          method.setSymbol(methodSymbol)
           for (param <- method.args){
             methodSymbol.lookupVar(param.id.value) match {
               case Some(sym) => Reporter.error("Parameter '"+param.id.value+"' is already declared at position: "+sym.posString,param)
@@ -87,6 +92,8 @@ object NameAnalysis extends Phase[Program, Program] {
                 val variableSymbol = new VariableSymbol(param.id.value).setPos(param)
                 methodSymbol.params += (variableSymbol.name -> variableSymbol)
                 methodSymbol.argList = methodSymbol.argList :+ variableSymbol
+
+                param.setSymbol(variableSymbol)
 
                 //TODO Add variables
             }

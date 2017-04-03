@@ -4,6 +4,7 @@ package analyzer
 object Symbols {
 
   trait Symbolic[S <: Symbol] {
+
     private var _sym: Option[S] = None
 
     def setSymbol(sym: S): this.type = { //TODO Start to use this
@@ -19,7 +20,7 @@ object Symbols {
 
   sealed abstract class Symbol extends Positioned {
     val id: Int = ID.next
-    val name: String
+    val name: String; print(name+" "+id+"\n")
   }
 
   private object ID {
@@ -36,7 +37,7 @@ object Symbols {
     var mainClass: ClassSymbol = _
     var classes = Map[String, ClassSymbol]()
 
-    def lookupClass(n: String): Option[ClassSymbol] = ???
+    def lookupClass(n: String): Option[ClassSymbol] = classes.get(n)
   }
 
   class ClassSymbol(val name: String) extends Symbol {
@@ -44,8 +45,8 @@ object Symbols {
     var methods = Map[String, MethodSymbol]()
     var members = Map[String, VariableSymbol]()
 
-    def lookupMethod(n: String): Option[MethodSymbol] = ???
-    def lookupVar(n: String): Option[VariableSymbol] = ???
+    def lookupMethod(n: String): Option[MethodSymbol] = methods.get(n)
+    def lookupVar(n: String): Option[VariableSymbol] = members.get(n)
   }
 
   class MethodSymbol(val name: String, val classSymbol: ClassSymbol) extends Symbol {
@@ -54,7 +55,13 @@ object Symbols {
     var argList: List[VariableSymbol] = Nil
     var overridden: Option[MethodSymbol] = None
 
-    def lookupVar(n: String): Option[VariableSymbol] = ???
+    def lookupVar(n: String): Option[VariableSymbol] =
+      (params.get(n),members.get(n)) match {
+        case (None,None) => None
+        case (None,s) => s
+        case (s,None) => s
+        case _ => sys.error("Two symbols with the same name")
+      }
   }
 
   class VariableSymbol(val name: String) extends Symbol
