@@ -54,13 +54,6 @@ object NameAnalysis extends Phase[Program, Program] {
 
           c.setSymbol(classSymbol)
       }
-
-      mainClassSymbol.members.updated("s",joinClassVariableSymbols(program.main.vars,mainClassSymbol))
-
-      val classSymbol = new ClassSymbol(c.id.value).setPos(c)
-      joinClassVariableSymbols(c.vars,classSymbol)
-
-
     }
   }
 
