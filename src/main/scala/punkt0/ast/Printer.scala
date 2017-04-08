@@ -50,6 +50,7 @@ object Printer {
       case node: VarDecl =>
         sb.append(" var ")
         getPrettyString(node.id, sb)
+        addId(node.getSymbol,sb)
         sb.append(" : ")
         getPrettyString(node.tpe, sb)
         sb.append("=")
@@ -80,7 +81,7 @@ object Printer {
         sb.append("\n}\n")
       case node: Formal =>
         getPrettyString(node.id,sb)
-
+        addId(node.getSymbol,sb)
         sb.append(" : ")
         getPrettyString(node.tpe,sb)
       case node: BooleanType => sb.append(" Boolean ")
@@ -139,6 +140,9 @@ object Printer {
         getPrettyString(node.obj,sb)
         sb.append(".")
         getPrettyString(node.meth,sb)
+        if(doSymId){
+          sb.append("#??")
+        }
         sb.append(" (")
         if (node.args.nonEmpty) {
           getPrettyString(node.args.head, sb)
@@ -192,7 +196,7 @@ object Printer {
         getPrettyString(node.id,sb)
         sb.append("=")
         getPrettyString(node.expr,sb)
-      case _ => Reporter.fatal("Wring node type in tree",branch)
+      case _ => Reporter.fatal("Wrong node type in tree",branch)
     }
   }
   def addId(symbol: Symbol,sb: StringBuilder): Unit ={

@@ -1,0 +1,17 @@
+class A {
+  def bar(): Int = {
+    41
+  }
+}
+
+class A {
+  def foo(): Int = {
+    1
+  }
+}
+
+
+
+object Main extends App {
+  println("Test")
+}

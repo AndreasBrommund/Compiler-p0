@@ -36,7 +36,6 @@ object Symbols {
   class GlobalScope {
     var mainClass: ClassSymbol = _
     var classes = Map[String, ClassSymbol]()
-
     def lookupClass(n: String): Option[ClassSymbol] = classes.get(n)
   }
 

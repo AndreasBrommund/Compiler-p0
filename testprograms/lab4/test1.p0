@@ -6,13 +6,20 @@ class B extends A {
 }
 
 class A {
+
   var value: Int = 0;
   def foo(): Int = {
     var value: Boolean = true;
     value = false;
     41
   }
+
+  /*def aaa(value: Int, b: String): Int = {
+
+  }*/
 }
+
+
 
 object Main extends App {
   println(new B().foo())

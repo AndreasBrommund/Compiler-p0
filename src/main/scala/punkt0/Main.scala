@@ -74,7 +74,6 @@ object Main {
         val token = tokenIterator.next
         printf("%s(%d:%d)\n",token,token.line,token.column)
       }
-      Reporter.terminateIfErrors()
     } else if(ctx.doAST) {
       val phase = Lexer.andThen(Parser)
       val ast = phase.run(ctx.file.get)(ctx)
@@ -84,5 +83,6 @@ object Main {
       val ast = phase.run(ctx.file.get)(ctx)
       println(Printer.apply(ast,ctx.doSymbolIds))
     }
+    Reporter.terminateIfErrors()
   }
 }

@@ -1,0 +1,18 @@
+class B extends A {
+  var b
+  def bar(): Int = {
+
+  }
+}
+
+
+class A {
+  var b
+  def bar(): Int = {
+
+  }
+}
+
+object Main extends App {
+  println("Test")
+}
