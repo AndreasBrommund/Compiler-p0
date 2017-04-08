@@ -3,22 +3,33 @@ package analyzer
 
 import ast.Trees._
 import Symbols._
-import Reporter._
 import scala.collection.mutable
 
 object NameAnalysis extends Phase[Program, Program] {
 
   def run(prog: Program)(ctx: Context): Program = {
 
+    linkClasses(prog.main,prog.classes,new GlobalScope)
+    linkInheritance(prog.classes)
+    checkCircularInheritance(prog.classes)
+    Reporter.terminateIfErrors()
+    linkClassVariables(prog.main.vars,prog.main.getSymbol)
 
-    val globalScope = new GlobalScope
-    joinProgramSymbols(prog,globalScope)
+    for(c <- prog.classes)
+      linkClassVariables(c.vars,c.getSymbol)
+
+    for(c <- prog.classes)
+      if(c.getSymbol.parent.isDefined)
+      checkClassVariables(c.vars,c.getSymbol.parent.get)
+
+    //joinProgramSymbols(prog,globalScope)
 
     //TODO First look for error in extentions
 
-    traverseClassExtensions(prog.classes,globalScope)
+    //traverseClassExtensions(prog.classes,globalScope)
 
-    traverseProgram(prog)
+
+    //traverseProgram(prog)
 
 
     // Step 1: Collect symbols in declarations
@@ -30,47 +41,84 @@ object NameAnalysis extends Phase[Program, Program] {
     prog
   }
 
-  def joinProgramSymbols(program: Program, globalScope: GlobalScope) : Unit = {
-
-    //Handle main class
-    val mainClassSymbol = new ClassSymbol(program.main.obj.value).setPos(program.main)
-    joinClassVariableSymbols(program.main.vars,mainClassSymbol)
-
+  def linkClasses(main: MainDecl, classes: List[ClassDecl], globalScope: GlobalScope): Unit = {
+    val mainClassSymbol = new ClassSymbol(main.obj.value).setPos(main)
+    main.setSymbol(mainClassSymbol)
     globalScope.mainClass = mainClassSymbol
 
-    program.main.setSymbol(mainClassSymbol)
-
-    //Handle all classes
-
-    for(c <- program.classes){
+    for(c <- classes){
       globalScope.lookupClass(c.id.value) match {
         case Some(sym) => Reporter.error("Class '"+c.id.value+"' is already declared at position: "+sym.posString,c)
         case None =>
-
           val classSymbol = new ClassSymbol(c.id.value).setPos(c)
-          joinClassVariableSymbols(c.vars,classSymbol)
-
-          joinClassMethodsSymbols(c.methods,classSymbol)
-
           globalScope.classes += (classSymbol.name -> classSymbol)
-
           c.setSymbol(classSymbol)
       }
     }
   }
 
-  def joinClassVariableSymbols(vars: List[VarDecl],classSymbol: ClassSymbol) : Unit = {
+  def linkInheritance(classes: List[ClassDecl]){
 
-    for(decl <- vars){
-      classSymbol.lookupVar(decl.id.value) match {
-        case Some(sym) => Reporter.error("Variable '"+decl.id.value+"' is already declared at position: "+sym.posString,decl)
-        case None =>
-          val varSymbol = new VariableSymbol(decl.id.value).setPos(decl)
-          classSymbol.members += (varSymbol.name -> varSymbol)
-          decl.setSymbol(varSymbol)
+    val classMap = mutable.HashMap.empty[Identifier,ClassDecl]
+    for(c <- classes){
+      classMap += (c.id -> c)
+    }
+
+    for(cls <- classes) {
+      if(cls.parent.isDefined){
+        classMap.get(cls.parent.get) match {
+          case Some(s) => cls.getSymbol.parent = Some(s.getSymbol)
+          case None => Reporter.error("Can't extend from undefined class '" + cls.parent.get.value + "' ", cls.parent.get)
+        }
       }
     }
   }
+
+  def checkCircularInheritance(classes: List[ClassDecl]): Unit = {
+    for (cls <- classes){
+      if(hasCircle(cls.getSymbol,Set()))
+          Reporter.error("Found circular inheritance ",cls)
+
+    }
+  }
+
+  def hasCircle(curr: ClassSymbol,visited: Set[ClassSymbol]): Boolean ={
+
+    lazy val res = curr.parent match {
+      case None => false
+      case Some(par) =>
+        hasCircle(par,visited+curr)
+    }
+
+    visited.contains(curr) || res
+  }
+
+  def linkClassVariables(vars: List[VarDecl], classSymbol: ClassSymbol): Unit ={
+
+    for(variable <- vars){
+      classSymbol.members.get(variable.id.value) match {
+        case Some(v) => Reporter.error("Variable '" + variable.id.value + "' is already declared at position: " + v.posString, variable)
+        case None =>
+          val varSymbol = new VariableSymbol(variable.id.value).setPos(variable)
+          classSymbol.members += (varSymbol.name -> varSymbol)
+          variable.setSymbol (varSymbol)
+      }
+    }
+  }
+
+  def checkClassVariables(vars: List[VarDecl], classSymbol: ClassSymbol): Unit ={
+    for(variable <- vars) {
+      classSymbol.lookupVar(variable.id.value) match {
+        case Some(v) => Reporter.error("Variable '" + variable.id.value + "' is already declared at position: " + v.posString, variable)
+        case None =>
+      }
+    }
+  }
+
+
+
+  
+
 
   def joinClassMethodsSymbols(methodDecl: List[MethodDecl],classSymbol: ClassSymbol) : Unit = {
 
@@ -112,47 +160,9 @@ object NameAnalysis extends Phase[Program, Program] {
     }
   }
 
-  def traverseClassExtensions(classes: List[ClassDecl], globalScope: GlobalScope) : Unit = {
-
-    val visited = mutable.HashMap.empty[ClassDecl,Boolean]
-    val classMap = mutable.HashMap.empty[Identifier,ClassDecl]
-
-    for(c <- classes){
-      classMap += (c.id -> c)
-    }
-
-    for(cls <- classes) {
-      if (!visited(cls)) {
-        var clsIt = cls
-        while (clsIt.parent.isDefined) {
-
-          globalScope.lookupClass(clsIt.parent.get.value) match{
-            case None => Reporter.error("Class '"+cls.parent.get.value+"' is not defined",cls)
-            case Some(parent) =>
-              visited += (clsIt -> true)
-              clsIt.getSymbol.parent = Some(parent)
-              clsIt = classMap(clsIt.parent.get)
-
-          }
-
-          if(clsIt.equals(cls)){
-            Reporter.error("Inheritance graph has a cycle",cls)
-          }
-        }
-        visited += (cls -> true)
-      }
-    }
-  }
 
 
-  def traverseProgram(program: Program) : Unit = {
-    program.classes.foreach(traverseClass)
-    traverseIdentifiers(program.main)
-  }
 
-  def traverseClass(c: ClassDecl) : Unit = {
-    //TODO a
-  }
 
   def traverseIdentifiers(branch: Tree) : Unit = {
     branch match {
