@@ -20,10 +20,6 @@ class A extends B{
     value = false;
     41
   }
-
-  /*def aaa(value: Int, b: String): Int = {
-
-  }*/
 }
 
 

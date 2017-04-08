@@ -1,0 +1,9 @@
+class C {
+   var hej: Int = 0;
+   var då: Int = 0;
+   var hej: Int = 0;
+}
+
+object Main extends App {
+  println(new B().foo())
+}

@@ -1,15 +1,7 @@
 class B extends A {
-  var b
+  var b: Int = 2;
   def bar(): Int = {
-
-  }
-}
-
-
-class A {
-  var b
-  def bar(): Int = {
-
+      3
   }
 }
 

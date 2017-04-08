@@ -1,0 +1,16 @@
+class C extends B{
+   var hej: Int = 0;
+}
+
+class B extends A{
+   var hejf: Int = 0;
+}
+
+class A{
+   var hej: Int = 0;
+}
+
+
+object Main extends App {
+  println(new B().foo())
+}

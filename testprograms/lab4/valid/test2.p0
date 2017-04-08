@@ -1,24 +1,23 @@
 class C extends B {
-  override def foo(): Int = {
-    value = 42;
-    value
+  var valu: Int = 2;
+  var hej: Int = 12;
+  def foo(): Int = {
+    2
   }
 }
 
-class B {
-  override def foo(): Int = {
-    value = 42;
-    value
-  }
+class B{
+    var valued: Int = 0;
+    def foo(): Int = {
+        2
+    }
 }
 
 class A extends B{
 
   var value: Int = 0;
   def foo(): Int = {
-    var value: Boolean = true;
-    value = false;
-    41
+    3
   }
 
   /*def aaa(value: Int, b: String): Int = {
