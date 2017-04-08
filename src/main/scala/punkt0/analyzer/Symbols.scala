@@ -44,8 +44,24 @@ object Symbols {
     var methods = Map[String, MethodSymbol]()
     var members = Map[String, VariableSymbol]()
 
-    def lookupMethod(n: String): Option[MethodSymbol] = methods.get(n)
-    def lookupVar(n: String): Option[VariableSymbol] = members.get(n)
+    def lookupMethod(n: String): Option[MethodSymbol] =
+      methods.get(n) match {
+        case res @ Some(_) => res
+        case None =>
+          parent match {
+            case Some(par) => par.lookupMethod(n)
+            case None => None
+          }
+      }
+    def lookupVar(n: String): Option[VariableSymbol] =
+      members.get(n) match {
+        case res @ Some(_) => res
+        case None =>
+          parent match {
+            case Some(par) => par.lookupVar(n)
+            case None => None
+          }
+      }
   }
 
   class MethodSymbol(val name: String, val classSymbol: ClassSymbol) extends Symbol {
