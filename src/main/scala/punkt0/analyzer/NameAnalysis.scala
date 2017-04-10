@@ -9,28 +9,51 @@ object NameAnalysis extends Phase[Program, Program] {
 
   def run(prog: Program)(ctx: Context): Program = {
 
-    linkClasses(prog.main,prog.classes,new GlobalScope)
+    linkClasses(prog.main, prog.classes, new GlobalScope)
     linkInheritance(prog.classes)
     checkCircularInheritance(prog.classes)
     Reporter.terminateIfErrors()
-    linkClassVariables(prog.main.vars,prog.main.getSymbol)
 
-    for(c <- prog.classes)
-      linkClassVariables(c.vars,c.getSymbol)
+    linkClassVariables(prog.main.vars, prog.main.getSymbol)
+    for (c <- prog.classes)
+      linkClassVariables(c.vars, c.getSymbol)
 
-    for(c <- prog.classes)
-      if(c.getSymbol.parent.isDefined) {
+    for (c <- prog.classes) {
+     if (c.getSymbol.parent.isDefined) {
         checkClassVariables(c.vars, c.getSymbol.parent.get)
       }
+    }
 
-    //joinProgramSymbols(prog,globalScope)
+    for (c <- prog.classes){
 
-    //TODO First look for error in extentions
+      for (m <- c.methods){
+        linkClassMethod(m,c.getSymbol)
+        Reporter.terminateIfErrors()
+        linkMethodVariables(m.args,m.vars,m.getSymbol)
+      }
+    }
 
-    //traverseClassExtensions(prog.classes,globalScope)
+    for(c <- prog.classes) {
+      checkClassMethod(c.methods,c.getSymbol)
+    }
 
 
-    //traverseProgram(prog)
+    /*
+    //TODO Same thing for main
+    for(c <- prog.classes) {
+      for (m <- c.methods){
+        for (exp <- m.exprs){
+          //TODO check e.expr
+        }
+        for (e <- m.vars){
+          //TODO check e.expr
+        }
+
+        //TODO m.retExpr ???
+      }
+    }*/
+
+    //TODO Need to check EVERY ident ex Type -> ident
 
 
     // Step 1: Collect symbols in declarations
@@ -116,54 +139,74 @@ object NameAnalysis extends Phase[Program, Program] {
     }
   }
 
+  def linkClassMethod(method: MethodDecl, classSymbol: ClassSymbol) : Unit = {
 
+    classSymbol.methods.get(method.id.value) match {
+      case Some(v) => Reporter.error("Method '" + method.id.value + "' is already declared at position: " + v.posString, method)
+      case None =>
+        val methodSymbol = new MethodSymbol(method.id.value,classSymbol).setPos(method)
+        classSymbol.methods += (methodSymbol.name -> methodSymbol)
+        method.setSymbol(methodSymbol)
+    }
 
+  }
 
-
-
-  def joinClassMethodsSymbols(methodDecl: List[MethodDecl],classSymbol: ClassSymbol) : Unit = {
-
-    for(method <- methodDecl){
-      classSymbol.lookupMethod(method.id.value) match {
-        case Some(sym) => Reporter.error("Method '"+method.id.value+"' is already declared at position: "+sym.posString,method)
+  def linkMethodVariables(params : List[Formal], vars : List[VarDecl], methodSymbol: MethodSymbol) : Unit = {
+    for(param <- params){
+      methodSymbol.params.get(param.id.value) match {
+        case Some(p) => Reporter.error("Parameter '" + param.id.value + "' is already declared at position: " + p.posString, param)
         case None =>
-          val methodSymbol = new MethodSymbol(method.id.value,classSymbol).setPos(method)
-          method.setSymbol(methodSymbol)
+          val variableSymbol = new VariableSymbol(param.id.value).setPos(param)
+          methodSymbol.params += (variableSymbol.name -> variableSymbol)
+          methodSymbol.argList = methodSymbol.argList :+ variableSymbol
+          param.setSymbol(variableSymbol)
+      }
+    }
 
-          //Add all parameters for a method
-          for (param <- method.args){
-            methodSymbol.lookupVar(param.id.value) match {
-              case Some(sym) => Reporter.error("Parameter '"+param.id.value+"' is already declared at position: "+sym.posString,param)
-              case None =>
-                val variableSymbol = new VariableSymbol(param.id.value).setPos(param)
-                methodSymbol.params += (variableSymbol.name -> variableSymbol)
-                methodSymbol.argList = methodSymbol.argList :+ variableSymbol
+    for (v <- vars){
 
-                param.setSymbol(variableSymbol)
-            }
-          }
+      lazy val lookupParam = methodSymbol.params.get(v.id.value)
+      lazy val lookupVar = methodSymbol.members.get(v.id.value)
 
-          //Add all method variables
-          for (variable <- method.vars){
-            methodSymbol.lookupVar(variable.id.value) match {
-              case Some(sym) => Reporter.error("Variable '"+variable.id.value+"' is already declared at position: "+sym.posString,variable)
-              case None =>
-                val variableSymbol = new VariableSymbol(variable.id.value).setPos(variable)
-                methodSymbol.members += (variableSymbol.name -> variableSymbol)
-
-                variable.setSymbol(variableSymbol)
-            }
-          }
-
-          classSymbol.methods += (methodSymbol.name -> methodSymbol)
-
+      (lookupParam,lookupVar) match {
+        case(Some(p),_) => Reporter.error("Variable '" + v.id.value + "' can't shadow parameter at position: " + p.posString, v)
+        case(_,Some(p)) => Reporter.error("Variable '" + v.id.value + "' is already declared at position: " + p.posString, v)
+        case(None,None) =>
+          val variableSymbol = new VariableSymbol(v.id.value).setPos(v)
+          methodSymbol.members += (variableSymbol.name -> variableSymbol)
+          v.setSymbol(variableSymbol)
       }
     }
   }
 
+  def checkClassMethod(methods: List[MethodDecl], classSymbol: ClassSymbol) : Unit = {
+    for(method <- methods){
+      if(classSymbol.parent.isDefined){
+        val parent = classSymbol.parent.get
+        if(method.overrides){
+          parent.lookupMethod(method.id.value) match {
+            case Some(m) =>
+              if(m.argList.size == method.args.size){
+                method.getSymbol.overridden = Some(m)
+              }else{
+                Reporter.error("Overrided method doesn't have the same amount of arguments", method)
+              }
+            case None => Reporter.error(method.id.value +" overrides a method that doesn't exist", method)
 
-
-
+          }
+        }else{
+          parent.lookupMethod(method.id.value) match {
+            case Some(m) => Reporter.error("Method '" + method.id.value + "' is already declared at position: " + m.posString, method)
+            case None =>
+          }
+        }
+      }else{
+        if(method.overrides){
+          Reporter.error(method.id.value +" overrides a method that doesn't exist", method)
+        }
+      }
+    }
+  }
 
   def traverseIdentifiers(branch: Tree) : Unit = {
     branch match {
