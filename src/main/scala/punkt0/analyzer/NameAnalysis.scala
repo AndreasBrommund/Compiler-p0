@@ -19,8 +19,9 @@ object NameAnalysis extends Phase[Program, Program] {
       linkClassVariables(c.vars,c.getSymbol)
 
     for(c <- prog.classes)
-      if(c.getSymbol.parent.isDefined)
-      checkClassVariables(c.vars,c.getSymbol.parent.get)
+      if(c.getSymbol.parent.isDefined) {
+        checkClassVariables(c.vars, c.getSymbol.parent.get)
+      }
 
     //joinProgramSymbols(prog,globalScope)
 
@@ -117,7 +118,7 @@ object NameAnalysis extends Phase[Program, Program] {
 
 
 
-  
+
 
 
   def joinClassMethodsSymbols(methodDecl: List[MethodDecl],classSymbol: ClassSymbol) : Unit = {
