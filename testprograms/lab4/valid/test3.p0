@@ -1,0 +1,48 @@
+class C extends B{
+  override def foo(int : Int): Int = {
+    30
+  }
+
+  def  a(): Int = {
+    20
+  }
+
+  override def test() : String = {
+   3
+  }
+}
+
+
+class B extends A{
+  override def foo(int:Int): Int = {
+    30
+  }
+}
+
+class A{
+  def foo(a:Int): Int = {
+    41
+  }
+
+  def test() : String = {
+     3
+   }
+}
+
+class E extends D{
+    override def a(): Int = {
+        45
+    }
+}
+
+class D {
+    def a(): Int = {
+        45
+    }
+}
+
+
+
+object Main extends App {
+  println(new B().foo())
+}

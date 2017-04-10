@@ -1,0 +1,14 @@
+class A{
+  def foo(): Int = {
+    41
+  }
+  def foo(a:Int): Int = {
+      223
+  }
+}
+
+
+
+object Main extends App {
+  println(new B().foo())
+}

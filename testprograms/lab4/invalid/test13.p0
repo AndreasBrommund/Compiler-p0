@@ -1,0 +1,12 @@
+class D {
+
+    def foo(a:Int,a:Int): Int = {
+          30
+    }
+}
+
+
+
+object Main extends App {
+  println(new D().foo())
+}

@@ -1,0 +1,24 @@
+class B extends A{
+  override def foo(): Int = {
+    30
+  }
+
+  def foo(): Int = {
+      30
+  }
+}
+
+class A{
+  def foo(): Int = {
+    41
+  }
+}
+
+
+
+object Main extends App {
+  println(new B().foo())
+}
+
+
+

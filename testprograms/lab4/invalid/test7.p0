@@ -1,0 +1,23 @@
+class C extends B {
+  def foo(a:Int): Int = {
+    23
+  }
+}
+
+class B extends A{
+  def a(): Int = {
+    30
+  }
+}
+
+class A{
+  def foo(): Int = {
+    41
+  }
+}
+
+
+
+object Main extends App {
+  println(new B().foo())
+}
