@@ -20,7 +20,7 @@ object Symbols {
 
   sealed abstract class Symbol extends Positioned {
     val id: Int = ID.next
-    val name: String; print(name+" "+id+"\n")
+    val name: String;
   }
 
   private object ID {
@@ -70,13 +70,7 @@ object Symbols {
     var argList: List[VariableSymbol] = Nil
     var overridden: Option[MethodSymbol] = None
 
-    def lookupVar(n: String): Option[VariableSymbol] =
-      (params.get(n),members.get(n)) match {
-        case (None,None) => None
-        case (None,s) => s
-        case (s,None) => s
-        case _ => sys.error("Two symbols with the same name")
-      }
+    def lookupVar(n: String): Option[VariableSymbol] = ???
   }
 
   class VariableSymbol(val name: String) extends Symbol

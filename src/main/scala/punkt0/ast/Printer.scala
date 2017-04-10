@@ -40,6 +40,7 @@ object Printer {
         if(node.parent.isDefined){
           sb.append(" extends ")
           getPrettyString(node.parent.get,sb)
+          addId(node.getSymbol.parent.get,sb)
         }
         sb.append(" {\n")
         node.vars.foreach(n => getPrettyString(n, sb))
