@@ -7,7 +7,7 @@ object Symbols {
 
     private var _sym: Option[S] = None
 
-    def setSymbol(sym: S): this.type = { //TODO Start to use this
+    def setSymbol(sym: S): this.type = {
       _sym = Some(sym)
       this
     }
@@ -16,6 +16,8 @@ object Symbols {
       case Some(s) => s
       case None => sys.error("Accessing undefined symbol.")
     }
+
+    def hasSymbol: Boolean = _sym.isDefined
   }
 
   sealed abstract class Symbol extends Positioned {
@@ -70,7 +72,16 @@ object Symbols {
     var argList: List[VariableSymbol] = Nil
     var overridden: Option[MethodSymbol] = None
 
-    def lookupVar(n: String): Option[VariableSymbol] = ???
+    def lookupVar(n: String): Option[VariableSymbol] =
+      params.get(n) match {
+        case par @ Some(_) => par
+        case None =>
+          members.get(n) match {
+            case v @ Some(_) => v
+            case None => classSymbol.lookupVar(n)
+          }
+
+      }
   }
 
   class VariableSymbol(val name: String) extends Symbol

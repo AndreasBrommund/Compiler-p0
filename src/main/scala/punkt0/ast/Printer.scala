@@ -157,7 +157,11 @@ object Printer {
         sb.append("\"")
       case node: True => sb.append(" true ")
       case node: False => sb.append(" false ")
-      case node: Identifier => sb.append(node.value)
+      case node: Identifier =>
+        sb.append(node.value)
+        if(doSymId&&node.hasSymbol){
+          sb.append("#"+node.getSymbol.id)
+        }
       case node: This => sb.append(" this ")
       case node: Null => sb.append(" null ")
       case node: New =>
