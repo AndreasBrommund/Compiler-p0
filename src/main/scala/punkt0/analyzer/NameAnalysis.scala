@@ -11,6 +11,7 @@ object NameAnalysis extends Phase[Program, Program] {
 
     linkClasses(prog.main, prog.classes, new GlobalScope)
     linkInheritance(prog.classes)
+    Reporter.terminateIfErrors()
     checkCircularInheritance(prog.classes)
     Reporter.terminateIfErrors()
 
@@ -18,12 +19,13 @@ object NameAnalysis extends Phase[Program, Program] {
     for (c <- prog.classes)
       linkClassVariables(c.vars, c.getSymbol)
 
+    Reporter.terminateIfErrors()
     for (c <- prog.classes) {
      if (c.getSymbol.parent.isDefined) {
         checkClassVariables(c.vars, c.getSymbol.parent.get)
       }
     }
-
+    Reporter.terminateIfErrors()
     for (c <- prog.classes){
 
       for (m <- c.methods){
@@ -32,11 +34,11 @@ object NameAnalysis extends Phase[Program, Program] {
         linkMethodVariables(m.args,m.vars,m.getSymbol)
       }
     }
-
+    Reporter.terminateIfErrors()
     for(c <- prog.classes) {
       checkClassMethod(c.methods,c.getSymbol)
     }
-
+    Reporter.terminateIfErrors()
 
     /*
     //TODO Same thing for main
@@ -69,6 +71,12 @@ object NameAnalysis extends Phase[Program, Program] {
     val mainClassSymbol = new ClassSymbol(main.obj.value).setPos(main)
     main.setSymbol(mainClassSymbol)
     globalScope.mainClass = mainClassSymbol
+
+    if(main.parent.value == "App"){
+      main.getSymbol.parent = Some(new ClassSymbol("App"))
+    }else{
+      Reporter.error("Main class doesn't extend App",main.parent)
+    }
 
     for(c <- classes){
       globalScope.lookupClass(c.id.value) match {
@@ -140,15 +148,17 @@ object NameAnalysis extends Phase[Program, Program] {
   }
 
   def linkClassMethod(method: MethodDecl, classSymbol: ClassSymbol) : Unit = {
-
-    classSymbol.methods.get(method.id.value) match {
-      case Some(v) => Reporter.error("Method '" + method.id.value + "' is already declared at position: " + v.posString, method)
-      case None =>
-        val methodSymbol = new MethodSymbol(method.id.value,classSymbol).setPos(method)
+    val varLookup = classSymbol.lookupVar(method.id.value)
+    val methodLookup = classSymbol.methods.get(method.id.value)
+    (varLookup, methodLookup) match {
+      case (None, None) =>
+        val methodSymbol = new MethodSymbol(method.id.value, classSymbol).setPos(method)
         classSymbol.methods += (methodSymbol.name -> methodSymbol)
         method.setSymbol(methodSymbol)
-    }
+      case (Some(v), _) => Reporter.error("Not allowed to have a field and a method with the same name: " + v.posString, method)
+      case (_, Some(m)) => Reporter.error("Method '" + method.id.value + "' is already declared at position: " + m.posString, method)
 
+    }
   }
 
   def linkMethodVariables(params : List[Formal], vars : List[VarDecl], methodSymbol: MethodSymbol) : Unit = {
