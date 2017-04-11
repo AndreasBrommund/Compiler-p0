@@ -8,5 +8,5 @@ class D {
 
 
 object Main extends App {
-  println(new D().foo())
+  println(new D().foo(1,2))
 }

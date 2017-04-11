@@ -1,7 +1,8 @@
 class C extends B {
   var valu: Int = 2;
   var hej: Int = 12;
-  def foo(): Int = {
+
+  override def foo(): Int = {
     2
   }
 }
@@ -16,7 +17,7 @@ class B{
 class A extends B{
 
   var value: Int = 0;
-  def foo(): Int = {
+  override def foo(): Int = {
     3
   }
 

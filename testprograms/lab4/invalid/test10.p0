@@ -14,5 +14,5 @@ class A{
 
 
 object Main extends App {
-  println(new B().foo())
+  println(new B().foo(2))
 }

@@ -2,12 +2,12 @@ class D {
     def a(a:Int): Int = {
         var b:Int = 2;
         var b:Int = 3;
-        b
+        a
     }
 }
 
 
 
 object Main extends App {
-  println(new D().foo())
+  println(new D().a(2))
 }

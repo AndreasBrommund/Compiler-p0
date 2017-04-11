@@ -3,5 +3,5 @@ class A extends A{
 }
 
 object Main extends App {
-  println(new B().foo())
+  println(new A())
 }
