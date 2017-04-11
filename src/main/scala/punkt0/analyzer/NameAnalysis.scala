@@ -284,7 +284,7 @@ object NameAnalysis extends Phase[Program, Program] {
       case node: Identifier =>
         lookupVar(node.value) match {
           case Some(v) => node.setSymbol(v)
-          case None => case None => Reporter.error("Identifier '" + node.value + "' is not defined: ", node)
+          case None => Reporter.error("Identifier '" + node.value + "' is not defined: ", node)
         }
       case node: New =>
         linkType(node.tpe)
