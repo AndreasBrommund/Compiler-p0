@@ -1,0 +1,13 @@
+class D {
+  var b:Int = 0;
+  def b(a:Int): Int = {
+    var b:Int = 2;
+    b
+  }
+}
+
+
+
+object Main extends App {
+  println(new D().b(2))
+}
