@@ -1,15 +1,19 @@
-class B extends A {
-  override def foo(): Int = {
-    value = 42;
-    value
-  }
+class B  {
+  var b : Int  = 2;
 }
 
-class A {
+class A extends B{
   var value: Int = 0;
-  def foo(): Int = {
+  var string:String = "d";
+  def foo(string:Int): R = {
     var value: Boolean = true;
     value = false;
+    string = 1;
+    new B();
+    this;
+    value = 2;
+
+    value = b+2;
     41
   }
 }
