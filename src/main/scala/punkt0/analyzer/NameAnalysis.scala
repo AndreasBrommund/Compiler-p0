@@ -2,6 +2,7 @@ package punkt0
 package analyzer
 
 import ast.Trees._
+import Types._
 import Symbols._
 import scala.collection.mutable
 
@@ -154,6 +155,7 @@ object NameAnalysis extends Phase[Program, Program] {
         case None =>
           val varSymbol = new VariableSymbol(variable.id.value).setPos(variable)
           classSymbol.members += (varSymbol.name -> varSymbol)
+          varSymbol.setType(typeTree2Type(variable.tpe,globalScope))
           variable.setSymbol(varSymbol)
       }
     }
@@ -175,6 +177,9 @@ object NameAnalysis extends Phase[Program, Program] {
       case (None, None) =>
         val methodSymbol = new MethodSymbol(method.id.value, classSymbol).setPos(method)
         classSymbol.methods += (methodSymbol.name -> methodSymbol)
+
+        methodSymbol.setType(typeTree2Type(method.retType,globalScope))
+
         method.setSymbol(methodSymbol)
       case (Some(v), _) => Reporter.error("Not allowed to have a field and a method with the same name: " + v.posString, method)
       case (_, Some(m)) => Reporter.error("Method '" + method.id.value + "' is already declared at position: " + m.posString, method)
@@ -190,6 +195,7 @@ object NameAnalysis extends Phase[Program, Program] {
           val variableSymbol = new VariableSymbol(param.id.value).setPos(param)
           methodSymbol.params += (variableSymbol.name -> variableSymbol)
           methodSymbol.argList = methodSymbol.argList :+ variableSymbol
+          variableSymbol.setType(typeTree2Type(param.tpe,globalScope))
           param.setSymbol(variableSymbol)
       }
     }
@@ -205,6 +211,7 @@ object NameAnalysis extends Phase[Program, Program] {
         case (None, None) =>
           val variableSymbol = new VariableSymbol(v.id.value).setPos(v)
           methodSymbol.members += (variableSymbol.name -> variableSymbol)
+          variableSymbol.setType(typeTree2Type(v.tpe,globalScope))
           v.setSymbol(variableSymbol)
       }
     }
@@ -219,11 +226,20 @@ object NameAnalysis extends Phase[Program, Program] {
             case Some(m) =>
               if (m.argList.size == method.args.size) {
                 method.getSymbol.overridden = Some(m)
+
+                for (i  <- m.argList.indices){
+                  if (m.argList(i).getType != method.getSymbol.argList(i).getType)
+                    Reporter.error("Overridden method doesn't have the same method signature", method)
+                }
+
+                if (method.getSymbol.getType != m.getType)
+                  Reporter.error("Overridden method doesn't have the same method signature", method)
+
+
               } else {
-                Reporter.error("Overrided method doesn't have the same amount of arguments", method)
+                Reporter.error("Overridden method doesn't have the same amount of arguments", method)
               }
             case None => Reporter.error(method.id.value + " overrides a method that doesn't exist", method)
-
           }
         } else {
           parent.lookupMethod(method.id.value) match {
@@ -244,7 +260,8 @@ object NameAnalysis extends Phase[Program, Program] {
       case id@Identifier(value) =>
         globalScope.lookupClass(value) match {
           case None => Reporter.error("Type '" + value + "' is not defined: ", typ)
-          case Some(cls) => id.setSymbol(cls)
+          case Some(cls) =>
+            id.setSymbol(cls)
         }
       case _ =>
     }
@@ -310,4 +327,6 @@ object NameAnalysis extends Phase[Program, Program] {
     }
 
   }
+
+
 }

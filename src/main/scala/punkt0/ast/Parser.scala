@@ -101,7 +101,7 @@ object Parser extends Phase[Iterator[Token], Program] {
       eat(COLON)
       val varType = parseType
       eat(EQSIGN)
-      val varExpr = parseExpression
+      val varExpr = parseExpression //TODO FIX so it is just constants
       eat(SEMICOLON)
       new VarDecl(varType, varName, varExpr).setPos(firstTokenPos)
     }

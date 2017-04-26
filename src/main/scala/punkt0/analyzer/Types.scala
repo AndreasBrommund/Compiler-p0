@@ -2,6 +2,7 @@ package punkt0
 package analyzer
 
 import Symbols._
+import punkt0.ast.Trees._
 
 object Types {
 
@@ -34,13 +35,68 @@ object Types {
     override def toString = "Int"
   }
 
-  // TODO: Complete by creating necessary types
+  case object TBoolean extends Type {
+    override def isSubTypeOf(tpe: Type): Boolean = tpe match {
+      case TBoolean => true
+      case _ => false
+    }
+    override def toString = "Boolean"
+  }
+
+  case object TString extends Type {
+    override def isSubTypeOf(tpe: Type): Boolean = tpe match {
+      case TString => true
+      case _ => false
+    }
+    override def toString = "String"
+  }
+
+  case object TUnit extends Type {
+    override def isSubTypeOf(tpe: Type): Boolean = tpe match {
+      case TUnit => true
+      case _ => false
+    }
+    override def toString = "Unit"
+  }
+
+  case class TClass(classSymbol: ClassSymbol) extends Type {
+    override def isSubTypeOf(tpe: Type): Boolean = {
+      if (tpe.isInstanceOf[TAnyRef] || tpe == classSymbol.getType ){
+        true
+      } else {
+        classSymbol.parent match {
+          case Some(c) => c.getType.isSubTypeOf(tpe)
+          case None => false
+        }
+      }
+    }
+
+    override def toString = classSymbol.name
+  }
 
   case class TAnyRef(classSymbol: ClassSymbol) extends Type {
-    override def isSubTypeOf(tpe: Type): Boolean = ???
+    override def isSubTypeOf(tpe: Type): Boolean = tpe match {
+      case _: TAnyRef => true
+      case _ => false
+    }
     override def toString = classSymbol.name
   }
 
   // special object to implement the fact that all objects are its subclasses
   val anyRef = TAnyRef(new ClassSymbol("AnyRef"))
+
+
+  def typeTree2Type(typeTree: TypeTree,globalScope: GlobalScope): Type ={
+    typeTree match {
+      case _: BooleanType => TBoolean
+      case _: IntType => TInt
+      case _: StringType => TString
+      case _: UnitType => TUnit
+      case id: Identifier =>
+        globalScope.lookupClass(id.value) match {
+          case Some(c) => TClass(c)
+          case None => TError
+        }
+    }
+  }
 }
