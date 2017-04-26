@@ -1,10 +1,11 @@
 package punkt0
 package analyzer
 
+import Types._
+
 object Symbols {
 
   trait Symbolic[S <: Symbol] {
-
     private var _sym: Option[S] = None
 
     def setSymbol(sym: S): this.type = {
@@ -20,9 +21,9 @@ object Symbols {
     def hasSymbol: Boolean = _sym.isDefined
   }
 
-  sealed abstract class Symbol extends Positioned {
+  sealed abstract class Symbol extends Positioned with Typed {
     val id: Int = ID.next
-    val name: String;
+    val name: String
   }
 
   private object ID {
