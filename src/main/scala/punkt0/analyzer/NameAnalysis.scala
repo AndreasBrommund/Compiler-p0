@@ -171,18 +171,16 @@ object NameAnalysis extends Phase[Program, Program] {
   }
 
   def linkClassMethod(method: MethodDecl, classSymbol: ClassSymbol): Unit = {
-    val varLookup = classSymbol.lookupVar(method.id.value)
     val methodLookup = classSymbol.methods.get(method.id.value)
-    (varLookup, methodLookup) match {
-      case (None, None) =>
+    methodLookup match {
+      case None =>
         val methodSymbol = new MethodSymbol(method.id.value, classSymbol).setPos(method)
         classSymbol.methods += (methodSymbol.name -> methodSymbol)
 
         methodSymbol.setType(typeTree2Type(method.retType,globalScope))
 
         method.setSymbol(methodSymbol)
-      case (Some(v), _) => Reporter.error("Not allowed to have a field and a method with the same name: " + v.posString, method)
-      case (_, Some(m)) => Reporter.error("Method '" + method.id.value + "' is already declared at position: " + m.posString, method)
+      case Some(m) => Reporter.error("Method '" + method.id.value + "' is already declared at position: " + m.posString, method)
 
     }
   }
