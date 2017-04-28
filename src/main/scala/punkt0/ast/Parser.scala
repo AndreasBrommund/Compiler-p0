@@ -101,7 +101,38 @@ object Parser extends Phase[Iterator[Token], Program] {
       eat(COLON)
       val varType = parseType
       eat(EQSIGN)
-      val varExpr = parseExpression //TODO FIX so it is just constants
+
+      //Takes only constant exprs
+      val varExpr = currentToken match {
+        case integer: INTLIT =>
+          readToken
+          val i = integer.value
+          new IntLit(i).setPos(integer)
+        case string: STRLIT =>
+          readToken
+          val s = string.value
+          new StringLit(s).setPos(string)
+        case tok => currentToken.kind match {
+          case TRUE =>
+            eat(TRUE)
+            new True().setPos(tok)
+          case FALSE =>
+            eat(FALSE)
+            new False().setPos(tok)
+          case NULL =>
+            eat(NULL)
+            new Null().setPos(tok)
+          case NEW =>
+            eat(NEW)
+            val id = parseIdent
+            eat(LPAREN)
+            eat(RPAREN)
+            new New(id).setPos(tok)
+          case _ => expected(INTLITKIND,STRLITKIND,TRUE,FALSE,NULL,NEW)
+        }
+      }
+
+
       eat(SEMICOLON)
       new VarDecl(varType, varName, varExpr).setPos(firstTokenPos)
     }
