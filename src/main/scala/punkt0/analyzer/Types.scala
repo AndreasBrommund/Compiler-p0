@@ -59,25 +59,16 @@ object Types {
     override def toString = "Unit"
   }
 
-  case class TClass(classSymbol: ClassSymbol) extends Type {
-    override def isSubTypeOf(tpe: Type): Boolean = {
-      if (tpe.isInstanceOf[TAnyRef] || tpe == classSymbol.getType ){
+  case class TAnyRef(classSymbol: ClassSymbol) extends Type {
+    override def isSubTypeOf(tpe: Type): Boolean ={
+      if (tpe.toString == "AnyRef" || tpe.toString == toString){
         true
-      } else {
+      }else {
         classSymbol.parent match {
           case Some(c) => c.getType.isSubTypeOf(tpe)
           case None => false
         }
       }
-    }
-
-    override def toString = classSymbol.name
-  }
-
-  case class TAnyRef(classSymbol: ClassSymbol) extends Type {
-    override def isSubTypeOf(tpe: Type): Boolean = tpe match {
-      case _: TAnyRef => true
-      case _ => false
     }
     override def toString = classSymbol.name
   }
@@ -94,7 +85,7 @@ object Types {
       case _: UnitType => TUnit
       case id: Identifier =>
         globalScope.lookupClass(id.value) match {
-          case Some(c) => TClass(c)
+          case Some(c) => TAnyRef(c)
           case None => TError
         }
     }

@@ -64,6 +64,7 @@ object Main {
   }
 
   def main(args: Array[String]): Unit = {
+
     val ctx = processOptions(args)
 
     if(ctx.file.isEmpty) {

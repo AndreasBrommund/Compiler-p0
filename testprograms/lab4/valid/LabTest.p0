@@ -5,7 +5,7 @@ class B  {
 class A extends B{
   var value: Int = 0;
   var string:String = "d";
-  def foo(string:Int): R = {
+  def foo(string:Int): A = {
     var value: Boolean = true;
     value = false;
     string = 1;

@@ -6,31 +6,37 @@ import Types._
 import Symbols._
 import scala.collection.mutable
 
+
+
 object NameAnalysis extends Phase[Program, Program] {
 
   val globalScope: GlobalScope = new GlobalScope
 
   def run(prog: Program)(ctx: Context): Program = {
 
+    //Go through all declarations
     linkClasses(prog.main, prog.classes)
     linkInheritance(prog.classes)
     Reporter.terminateIfErrors()
+
     checkCircularInheritance(prog.classes)
     Reporter.terminateIfErrors()
 
+    //Go through all class fields
     linkClassVariables(prog.main.vars, prog.main.getSymbol)
     for (c <- prog.classes)
       linkClassVariables(c.vars, c.getSymbol)
-
     Reporter.terminateIfErrors()
+
     for (c <- prog.classes) {
       if (c.getSymbol.parent.isDefined) {
         checkClassVariables(c.vars, c.getSymbol.parent.get)
       }
     }
     Reporter.terminateIfErrors()
-    for (c <- prog.classes) {
 
+    //Go through all class methods
+    for (c <- prog.classes) {
       for (m <- c.methods) {
         linkClassMethod(m, c.getSymbol)
         Reporter.terminateIfErrors()
@@ -38,11 +44,13 @@ object NameAnalysis extends Phase[Program, Program] {
       }
     }
     Reporter.terminateIfErrors()
+
     for (c <- prog.classes) {
       checkClassMethod(c.methods, c.getSymbol)
     }
     Reporter.terminateIfErrors()
 
+    //Go through the main object
     for (mainVar <- prog.main.vars) {
       linkType(mainVar.tpe)
       linkIdentExprs(mainVar.expr,prog.main.getSymbol.lookupVar)
@@ -51,7 +59,7 @@ object NameAnalysis extends Phase[Program, Program] {
       linkIdentExprs(mainExp,prog.main.getSymbol.lookupVar)
     }
 
-
+    //Go through all the exprs
     for (cls <- prog.classes) {
       for (clsVar <- cls.vars) {
         linkType(clsVar.tpe)
@@ -91,6 +99,7 @@ object NameAnalysis extends Phase[Program, Program] {
 
   def linkClasses(main: MainDecl, classes: List[ClassDecl]): Unit = {
     val mainClassSymbol = new ClassSymbol(main.obj.value).setPos(main)
+    mainClassSymbol.setType(new TAnyRef(mainClassSymbol))
     main.setSymbol(mainClassSymbol)
     globalScope.mainClass = mainClassSymbol
 
@@ -105,6 +114,7 @@ object NameAnalysis extends Phase[Program, Program] {
         case Some(sym) => Reporter.error("Class '" + c.id.value + "' is already declared at position: " + sym.posString, c)
         case None =>
           val classSymbol = new ClassSymbol(c.id.value).setPos(c)
+          classSymbol.setType(new TAnyRef(classSymbol))
           globalScope.classes += (classSymbol.name -> classSymbol)
           c.setSymbol(classSymbol)
       }
@@ -264,8 +274,8 @@ object NameAnalysis extends Phase[Program, Program] {
       case _ =>
     }
   }
-
-  def linkIdentExprs(expr: ExprTree, lookupVar: (String) => Option[VariableSymbol]): Unit = {
+//ADD type to new and this  (need to know the classSymbol)
+  def linkIdentExprs(expr: ExprTree, lookupVar: (String) => Option[VariableSymbol],classSymbol: ClassSymbol): Unit = {
     expr match {
       case node: And =>
         linkIdentExprs(node.lhs,lookupVar)
