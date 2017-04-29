@@ -1,0 +1,10 @@
+class B{
+
+}
+
+
+object Main extends App {
+  var c:B = new B();
+  c.add();
+  println("")
+}

@@ -208,6 +208,7 @@ object TypeChecking extends Phase[Program, Program] {
       // Check result and return a valid type in case of error
       if (expected.isEmpty) {
         if (tpe == TError) {
+          Reporter.error("Type error", expr)
           TUnit
         } else {
           tpe
