@@ -134,11 +134,16 @@ object TypeChecking extends Phase[Program, Program] {
           n.setType(TBoolean)
           TBoolean
         case b: Block =>
-          
-          for (e <- b.exprs.init) {
-            tcExpr(e)
+
+          if (b.exprs.length > 1) { //Unesesery if size is 1
+            for (e <- b.exprs.init) {
+              tcExpr(e)
+            }
           }
-          val typ = tcExpr(b.exprs.last)
+          var typ : Type = TUnit
+          if(b.exprs.length > 0) {
+             typ = tcExpr(b.exprs.last)
+          }
           b.setType(typ)
           typ
 

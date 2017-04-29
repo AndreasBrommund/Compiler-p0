@@ -165,6 +165,7 @@ object NameAnalysis extends Phase[Program, Program] {
           val varSymbol = new VariableSymbol(variable.id.value).setPos(variable)
           classSymbol.members += (varSymbol.name -> varSymbol)
           varSymbol.setType(typeTree2Type(variable.tpe,globalScope))
+          variable.tpe.setType(typeTree2Type(variable.tpe,globalScope))
           variable.setSymbol(varSymbol)
       }
     }
@@ -207,6 +208,7 @@ object NameAnalysis extends Phase[Program, Program] {
           methodSymbol.params += (variableSymbol.name -> variableSymbol)
           methodSymbol.argList = methodSymbol.argList :+ variableSymbol
           variableSymbol.setType(typeTree2Type(param.tpe,globalScope))
+          param.tpe.setType(typeTree2Type(param.tpe,globalScope))
           param.setSymbol(variableSymbol)
       }
     }
@@ -223,6 +225,7 @@ object NameAnalysis extends Phase[Program, Program] {
           val variableSymbol = new VariableSymbol(v.id.value).setPos(v)
           methodSymbol.members += (variableSymbol.name -> variableSymbol)
           variableSymbol.setType(typeTree2Type(v.tpe,globalScope))
+          v.tpe.setType(typeTree2Type(v.tpe,globalScope))
           v.setSymbol(variableSymbol)
       }
     }
