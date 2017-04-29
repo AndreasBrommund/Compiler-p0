@@ -80,10 +80,16 @@ object Main {
       val ast = phase.run(ctx.file.get)(ctx)
       println(ast)
     } else if(ctx.doPrintMain || ctx.doSymbolIds){
-      val phase = Lexer.andThen(Parser).andThen(NameAnalysis)
+      val phase = Lexer.andThen(Parser).andThen(NameAnalysis).andThen(TypeChecking)
       val ast = phase.run(ctx.file.get)(ctx)
+
       println(Printer.apply(ast,ctx.doSymbolIds))
     }
     Reporter.terminateIfErrors()
   }
+
+
+
+
 }
+

@@ -53,17 +53,17 @@ object NameAnalysis extends Phase[Program, Program] {
     //Go through the main object
     for (mainVar <- prog.main.vars) {
       linkType(mainVar.tpe)
-      linkIdentExprs(mainVar.expr,prog.main.getSymbol.lookupVar)
+      linkIdentExprs(mainVar.expr,prog.main.getSymbol.lookupVar,prog.main.getSymbol)
     }
     for (mainExp <- prog.main.exprs){
-      linkIdentExprs(mainExp,prog.main.getSymbol.lookupVar)
+      linkIdentExprs(mainExp,prog.main.getSymbol.lookupVar,prog.main.getSymbol)
     }
 
     //Go through all the exprs
     for (cls <- prog.classes) {
       for (clsVar <- cls.vars) {
         linkType(clsVar.tpe)
-        linkIdentExprs(clsVar.expr,cls.getSymbol.lookupVar)
+        linkIdentExprs(clsVar.expr,cls.getSymbol.lookupVar,cls.getSymbol)
       }
       for (method <- cls.methods) {
         for (param <- method.args) {
@@ -71,13 +71,13 @@ object NameAnalysis extends Phase[Program, Program] {
         }
         for (methodVar <- method.vars) {
           linkType(methodVar.tpe)
-          linkIdentExprs(methodVar.expr,method.getSymbol.lookupVar)
+          linkIdentExprs(methodVar.expr,method.getSymbol.lookupVar,cls.getSymbol)
         }
         linkType(method.retType)
         for (methodExp <- method.exprs){
-          linkIdentExprs(methodExp,method.getSymbol.lookupVar)
+          linkIdentExprs(methodExp,method.getSymbol.lookupVar,cls.getSymbol)
         }
-        linkIdentExprs(method.retExpr,method.getSymbol.lookupVar)
+        linkIdentExprs(method.retExpr,method.getSymbol.lookupVar,cls.getSymbol)
       }
     }
 
@@ -86,7 +86,6 @@ object NameAnalysis extends Phase[Program, Program] {
     Reporter.terminateIfErrors()
 
 
-    //TODO var decl constant ??????
 
     // Step 1: Collect symbols in declarations
     // Step 2: Attach symbols to identifiers (except method calls) in method bodies
@@ -274,37 +273,37 @@ object NameAnalysis extends Phase[Program, Program] {
       case _ =>
     }
   }
-//ADD type to new and this  (need to know the classSymbol)
+
   def linkIdentExprs(expr: ExprTree, lookupVar: (String) => Option[VariableSymbol],classSymbol: ClassSymbol): Unit = {
     expr match {
       case node: And =>
-        linkIdentExprs(node.lhs,lookupVar)
-        linkIdentExprs(node.rhs,lookupVar)
+        linkIdentExprs(node.lhs,lookupVar,classSymbol)
+        linkIdentExprs(node.rhs,lookupVar,classSymbol)
       case node: Or =>
-        linkIdentExprs(node.lhs,lookupVar)
-        linkIdentExprs(node.rhs,lookupVar)
+        linkIdentExprs(node.lhs,lookupVar,classSymbol)
+        linkIdentExprs(node.rhs,lookupVar,classSymbol)
       case node: Plus =>
-        linkIdentExprs(node.lhs,lookupVar)
-        linkIdentExprs(node.rhs,lookupVar)
+        linkIdentExprs(node.lhs,lookupVar,classSymbol)
+        linkIdentExprs(node.rhs,lookupVar,classSymbol)
       case node: Minus =>
-        linkIdentExprs(node.lhs,lookupVar)
-        linkIdentExprs(node.rhs,lookupVar)
+        linkIdentExprs(node.lhs,lookupVar,classSymbol)
+        linkIdentExprs(node.rhs,lookupVar,classSymbol)
       case node: Times =>
-        linkIdentExprs(node.lhs,lookupVar)
-        linkIdentExprs(node.rhs,lookupVar)
+        linkIdentExprs(node.lhs,lookupVar,classSymbol)
+        linkIdentExprs(node.rhs,lookupVar,classSymbol)
       case node: Div =>
-        linkIdentExprs(node.lhs,lookupVar)
-        linkIdentExprs(node.rhs,lookupVar)
+        linkIdentExprs(node.lhs,lookupVar,classSymbol)
+        linkIdentExprs(node.rhs,lookupVar,classSymbol)
       case node: LessThan =>
-        linkIdentExprs(node.lhs,lookupVar)
-        linkIdentExprs(node.rhs,lookupVar)
+        linkIdentExprs(node.lhs,lookupVar,classSymbol)
+        linkIdentExprs(node.rhs,lookupVar,classSymbol)
       case node: Equals =>
-        linkIdentExprs(node.lhs,lookupVar)
-        linkIdentExprs(node.rhs,lookupVar)
+        linkIdentExprs(node.lhs,lookupVar,classSymbol)
+        linkIdentExprs(node.rhs,lookupVar,classSymbol)
       case node: MethodCall =>
-        linkIdentExprs(node.obj,lookupVar)
+        linkIdentExprs(node.obj,lookupVar,classSymbol)
         //NOT ON THIS ONE FOR NOW: linkIdentExprs(node.meth)
-        node.args.foreach(a => linkIdentExprs(a,lookupVar))
+        node.args.foreach(a => linkIdentExprs(a,lookupVar,classSymbol))
 
       case node: Identifier =>
         lookupVar(node.value) match {
@@ -313,24 +312,29 @@ object NameAnalysis extends Phase[Program, Program] {
         }
       case node: New =>
         linkType(node.tpe)
+        node.setType(typeTree2Type(node.tpe,globalScope))
       case node: Not =>
-        linkIdentExprs(node.expr,lookupVar)
+        linkIdentExprs(node.expr,lookupVar,classSymbol)
       case node: Block =>
-        node.exprs.foreach(exp => linkIdentExprs(exp,lookupVar))
+        node.exprs.foreach(exp => linkIdentExprs(exp,lookupVar,classSymbol))
       case node: If =>
-        linkIdentExprs(node.expr,lookupVar)
-        linkIdentExprs(node.thn,lookupVar)
+        linkIdentExprs(node.expr,lookupVar,classSymbol)
+        linkIdentExprs(node.thn,lookupVar,classSymbol)
         if (node.els.isDefined) {
-          linkIdentExprs(node.els.get,lookupVar)
+          linkIdentExprs(node.els.get,lookupVar,classSymbol)
         }
       case node: While =>
-        linkIdentExprs(node.cond,lookupVar)
-        linkIdentExprs(node.body,lookupVar)
+        linkIdentExprs(node.cond,lookupVar,classSymbol)
+        linkIdentExprs(node.body,lookupVar,classSymbol)
       case node: Println =>
-        linkIdentExprs(node.expr,lookupVar)
+        linkIdentExprs(node.expr,lookupVar,classSymbol)
       case node: Assign =>
-        linkIdentExprs(node.id,lookupVar)
-        linkIdentExprs(node.expr,lookupVar)
+        linkIdentExprs(node.id,lookupVar,classSymbol)
+        linkIdentExprs(node.expr,lookupVar,classSymbol)
+      case node: This =>
+        node.setType(new TAnyRef(classSymbol))
+      case node: Null =>
+        node.setType(TNull)
       case _ =>
     }
 

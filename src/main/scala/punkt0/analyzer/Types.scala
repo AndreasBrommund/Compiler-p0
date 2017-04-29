@@ -18,7 +18,7 @@ object Types {
   }
 
   case object TError extends Type {
-    override def isSubTypeOf(tpe: Type): Boolean = true
+    override def isSubTypeOf(tpe: Type): Boolean = false //Have been changed
     override def toString = "[error]"
   }
 
@@ -61,7 +61,7 @@ object Types {
 
   case class TAnyRef(classSymbol: ClassSymbol) extends Type {
     override def isSubTypeOf(tpe: Type): Boolean ={
-      if (tpe.toString == "AnyRef" || tpe.toString == toString){
+      if (tpe.toString == "AnyRef" || tpe.toString == toString || toString == "null"){
         true
       }else {
         classSymbol.parent match {
@@ -73,9 +73,10 @@ object Types {
     override def toString = classSymbol.name
   }
 
+
   // special object to implement the fact that all objects are its subclasses
   val anyRef = TAnyRef(new ClassSymbol("AnyRef"))
-
+  val TNull = TAnyRef(new ClassSymbol("null"))
 
   def typeTree2Type(typeTree: TypeTree,globalScope: GlobalScope): Type ={
     typeTree match {
