@@ -1,0 +1,15 @@
+class A {}
+class B extends A{}
+class C extends A{}
+
+object Main extends App {
+  var a:A = null;
+  a = if (true) null else null;
+  a = if (true) new C() else new B();
+  a = if (true) new B() else new C();
+  a = if (true) new C() else new C();
+  a = if (true) new A() else new B();
+  a = if (true) new B() else new A();
+  a = if (true) new A() else null;
+  a = if (true) null else new A()
+}

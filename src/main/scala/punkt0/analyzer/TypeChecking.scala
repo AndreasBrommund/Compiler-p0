@@ -156,7 +156,7 @@ object TypeChecking extends Phase[Program, Program] {
                 //If both branches have the type null the if expression should have TAnyRef as its typ
                 //If any of the else or then branches have null as a type
                 //then the other branch will decide the type of the if expression
-                case (TNull, TNull) => anyRef
+                case (TNull, TNull) => TNull
                 case (TNull, typElse) => typElse
                 case (typThen, TNull) => typThen
                 case (thenType, elseType) =>
@@ -166,12 +166,13 @@ object TypeChecking extends Phase[Program, Program] {
                       case any: TAnyRef =>
                         var it = any //Iterate over all else subtypes until it
                         //finds the lowest common subtype with "then"
-                        while (!thenType.isSubTypeOf(it)) {
+                        while (!elseType.isSubTypeOf(it)) {
                           it.classSymbol.parent match {
                             case Some(parent) => it = parent.getType.asInstanceOf[TAnyRef]
                             case None => it = anyRef
                           }
                         }
+                        println(it)
                         it
                       case _ => TError
                     }
