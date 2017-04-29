@@ -16,7 +16,7 @@ object TypeChecking extends Phase[Program, Program] {
       tcExpr(v.expr,v.tpe.getType)
     }
     for(e <- prog.main.exprs){
-      tcExpr(e,TUnit)
+      tcExpr(e)
     }
     for(c <- prog.classes){
       for(v <- c.vars){
@@ -27,9 +27,9 @@ object TypeChecking extends Phase[Program, Program] {
           tcExpr(v.expr,v.tpe.getType)
         }
         for(e <- m.exprs){
-          tcExpr(e,TUnit)
+          tcExpr(e)
         }
-
+        m.retType
         tcExpr(m.retExpr,m.retType.getType)
       }
     }
@@ -134,7 +134,7 @@ object TypeChecking extends Phase[Program, Program] {
           n.setType(TBoolean)
           TBoolean
         case b: Block =>
-
+          
           for (e <- b.exprs.init) {
             tcExpr(e)
           }

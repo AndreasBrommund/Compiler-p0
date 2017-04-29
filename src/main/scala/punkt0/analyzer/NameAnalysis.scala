@@ -187,6 +187,10 @@ object NameAnalysis extends Phase[Program, Program] {
         classSymbol.methods += (methodSymbol.name -> methodSymbol)
 
         methodSymbol.setType(typeTree2Type(method.retType,globalScope))
+        method.retType.setType(typeTree2Type(method.retType,globalScope))
+
+
+
 
         method.setSymbol(methodSymbol)
       case Some(m) => Reporter.error("Method '" + method.id.value + "' is already declared at position: " + m.posString, method)
