@@ -172,7 +172,6 @@ object TypeChecking extends Phase[Program, Program] {
                             case None => it = anyRef
                           }
                         }
-                        println(it)
                         it
                       case _ => TError
                     }
