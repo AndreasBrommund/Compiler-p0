@@ -1,0 +1,12 @@
+class B{
+  def add(a:Int) : Unit = {
+    while(true){
+      2
+    }
+  }
+}
+
+
+object Main extends App {
+  println("")
+}

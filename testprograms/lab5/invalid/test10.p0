@@ -1,0 +1,16 @@
+class B{
+  def add(a:Int) : Unit = {
+    while("ds"){
+      println("d")
+    }
+
+
+  }
+}
+
+
+object Main extends App {
+  if("String"){
+    println("")
+  }
+}

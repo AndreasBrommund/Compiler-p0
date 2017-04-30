@@ -1,0 +1,16 @@
+class B{
+  def add(a:Int) : Int = {
+    while(1==1){
+      println("d")
+    }
+
+
+  }
+}
+
+
+object Main extends App {
+  if(1==1){
+    println("")
+  }
+}

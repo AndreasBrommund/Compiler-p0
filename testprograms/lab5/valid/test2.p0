@@ -1,0 +1,43 @@
+class A {
+  def a (): Int = {2}
+  def b (): String = {"s"}
+}
+class B extends A{
+  var c : A = null;
+  var d : B = null;
+  def me (): Unit = {
+    c = this;
+    d = this;
+    c = new B()
+  }
+
+}
+class C extends A{
+  def dfsdaf() : A = {
+    new C()
+  }
+
+  def dfsf() : C = {
+    new C()
+  }
+}
+
+object Main extends App {
+
+  var a : Int = 0;
+  var b : Int = 2;
+  var c : String = "";
+  var d : String = "2";
+  a = 1+2;
+  a = b + 2;
+  a = b + a;
+  a = new A().a();
+  a = new A().a()+2;
+  c = c + "d";
+  c = a + c;
+  c = "a" + b;
+  c = new A().b();
+  c = new A().b() + "d";
+  if (true) new A() else new B()
+
+}

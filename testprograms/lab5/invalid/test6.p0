@@ -1,0 +1,7 @@
+class A {}
+class B {
+  def foo(): A = { if (true) new A() else new B() } // expected A, found AnyRef which is not a subtype of A.
+}
+object Main extends App {
+  println("ds")
+}
