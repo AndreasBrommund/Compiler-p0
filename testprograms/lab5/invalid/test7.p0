@@ -1,0 +1,14 @@
+/*
+Agnes, null should work as expected.
+Null can be used wherever a class type is expected, but not where primitive types are expected.
+In Punkt0, we also treat String as a primitive type, so it cannot be null.
+So, yes, only variables of class types can be initialized as null.
+ */
+
+object Main extends App {
+  var a :Int = null;
+  var b :String  = null;
+  var c : Unit = null;
+  var d : Boolean = null;
+  println("ds")
+}
