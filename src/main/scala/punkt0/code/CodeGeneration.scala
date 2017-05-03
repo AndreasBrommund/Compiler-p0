@@ -57,16 +57,7 @@ object CodeGeneration extends Phase[Program, Unit] {
       for(varDec <- mt.vars){
         val index = ch.getFreshVar(p0ToCafeType(varDec.tpe.getType))
         symbolPositions += (varDec.getSymbol -> index)
-        addConstantVal(ch,varDec.expr)
-        varDec.expr match {
-          case True() => ch << IStore(index)
-          case False() => ch << IStore(index)
-          case Null() => ch << AStore(index)
-          case New(id) => ch << AStore(index)
-          case IntLit(i) => ch << IStore(index)
-          case StringLit(s) => ch << AStore(index)
-          case _ => ???
-        }
+        assignConstant(ch,index,varDec.expr)
       }
 
       ch << RETURN
@@ -85,7 +76,7 @@ object CodeGeneration extends Phase[Program, Unit] {
 
           constructor << ALOAD_0
 
-          addConstantVal(constructor,v.expr)
+          addConstantToStack(constructor,v.expr)
 
           constructor << PutField(classFile.className, v.id.value, p0ToCafeType(v.tpe.getType))
       }
@@ -111,7 +102,7 @@ object CodeGeneration extends Phase[Program, Unit] {
     // ...
   }
 
-   def addConstantVal (ch : CodeHandler, expr : ExprTree) : Unit = {
+   def addConstantToStack (ch : CodeHandler, expr : ExprTree) : Unit = {
      expr match {
        case True() => ch << ICONST_1
        case False() => ch << ICONST_0
@@ -121,6 +112,19 @@ object CodeGeneration extends Phase[Program, Unit] {
        case StringLit(s) => ch << Ldc(s)
        case _ => ???
      }
+  }
+
+  def assignConstant(ch : CodeHandler, index : Int, expr : ExprTree) : Unit = {
+    addConstantToStack(ch,expr)
+    expr match {
+      case True() => ch << IStore(index)
+      case False() => ch << IStore(index)
+      case Null() => ch << AStore(index)
+      case New(id) => ch << AStore(index)
+      case IntLit(i) => ch << IStore(index)
+      case StringLit(s) => ch << AStore(index)
+      case _ => ???
+    }
   }
 
   private def p0ToCafeType(tpe: Type): String = {
