@@ -29,7 +29,6 @@ object TypeChecking extends Phase[Program, Program] {
         for(e <- m.exprs){
           tcExpr(e)
         }
-        m.retType
         tcExpr(m.retExpr,m.retType.getType)
       }
     }

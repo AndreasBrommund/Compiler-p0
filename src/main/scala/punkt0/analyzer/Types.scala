@@ -61,7 +61,7 @@ object Types {
 
   case class TAnyRef(classSymbol: ClassSymbol) extends Type {
     override def isSubTypeOf(tpe: Type): Boolean ={
-      if (tpe.toString == "AnyRef" || tpe.toString == toString || (toString == "null" && tpe.isInstanceOf[TAnyRef])){
+      if (tpe.toString == "AnyRef" || tpe.toString == toString || (toString == TNull.toString && tpe.isInstanceOf[TAnyRef])){
         true
       }else {
         classSymbol.parent match {

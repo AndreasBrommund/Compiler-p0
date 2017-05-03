@@ -5,6 +5,7 @@ import java.io.File
 import lexer._
 import ast._
 import analyzer._
+import punkt0.code.CodeGeneration
 
 
 object Main {
@@ -84,6 +85,9 @@ object Main {
       val ast = phase.run(ctx.file.get)(ctx)
 
       println(Printer.apply(ast,ctx.doSymbolIds))
+    }else if (ctx.file.isDefined){
+      val phase = Lexer.andThen(Parser).andThen(NameAnalysis).andThen(TypeChecking).andThen(CodeGeneration)
+      val ast = phase.run(ctx.file.get)(ctx)
     }
     Reporter.terminateIfErrors()
   }
