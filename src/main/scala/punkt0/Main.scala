@@ -61,6 +61,7 @@ object Main {
     println(" --tokens      print tokens")
     println(" --ast         print abstract syntax tree")
     println(" --print       pritty-print")
+    println(" --symid       pritty-print with symid")
     println(" -d <outdir>   generates class files in the specified directory")
   }
 
