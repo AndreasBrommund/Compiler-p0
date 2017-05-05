@@ -284,6 +284,7 @@ object NameAnalysis extends Phase[Program, Program] {
   def linkIdentExprs(expr: ExprTree, lookupVar: (String) => Option[VariableSymbol],classSymbol: ClassSymbol): Unit = {
     expr match {
       case node: And =>
+
         linkIdentExprs(node.lhs,lookupVar,classSymbol)
         linkIdentExprs(node.rhs,lookupVar,classSymbol)
       case node: Or =>

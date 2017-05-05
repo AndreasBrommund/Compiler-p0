@@ -16,7 +16,7 @@ object TypeChecking extends Phase[Program, Program] {
       tcExpr(v.expr,v.tpe.getType)
     }
     for(e <- prog.main.exprs){
-      tcExpr(e)
+      tcExpr(e,TUnit)
     }
     for(c <- prog.classes){
       for(v <- c.vars){
@@ -27,7 +27,7 @@ object TypeChecking extends Phase[Program, Program] {
           tcExpr(v.expr,v.tpe.getType)
         }
         for(e <- m.exprs){
-          tcExpr(e)
+          tcExpr(e,TUnit)
         }
         tcExpr(m.retExpr,m.retType.getType)
       }
@@ -83,7 +83,8 @@ object TypeChecking extends Phase[Program, Program] {
           val typeRight = tcExpr(e.rhs)
           e.setType(TBoolean)
 
-          if (typeLeft.getClass != typeRight.getClass) {
+
+          if (typeLeft == TUnit || typeLeft.getClass != typeRight.getClass) {
             TError
           } else {
             TBoolean
@@ -136,7 +137,7 @@ object TypeChecking extends Phase[Program, Program] {
 
           if (b.exprs.length > 1) { //Unesesery if size is 1
             for (e <- b.exprs.init) {
-              tcExpr(e)
+              tcExpr(e,TUnit)
             }
           }
           var typ : Type = TUnit
