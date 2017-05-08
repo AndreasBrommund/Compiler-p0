@@ -42,7 +42,11 @@ object CodeGeneration extends Phase[Program, Unit] {
       }
 
       mainDecl.exprs foreach {
-        e => buildJVMStack(ch,e,symbolPositions,mainDecl.getSymbol.name)
+        e =>
+          buildJVMStack(ch,e,symbolPositions,mainDecl.getSymbol.name)
+          if(e.getType != TUnit){
+            ch << POP
+          }
       }
 
       ch << RETURN
@@ -94,6 +98,9 @@ object CodeGeneration extends Phase[Program, Unit] {
 
       mt.exprs foreach {
         e => buildJVMStack(ch,e,symbolPositions,methSym.classSymbol.name)
+          if(e.getType != TUnit){
+            ch << POP
+          }
       }
       buildJVMStack(ch,mt.retExpr,symbolPositions,methSym.classSymbol.name)
 
@@ -309,7 +316,17 @@ object CodeGeneration extends Phase[Program, Unit] {
 
         ch << InvokeVirtual(m.obj.getType.asInstanceOf[TAnyRef].toString,m.meth.value,methSignature)
       case Block(exprs) =>
-        exprs foreach(e => buildJVMStack(ch,e,symPos,className))
+        if(exprs.nonEmpty) {
+          exprs.init foreach{
+            e =>
+              buildJVMStack(ch,e,symPos,className)
+              if(e.getType != TUnit){
+                ch << POP
+              }
+          }
+
+          buildJVMStack(ch,exprs.last,symPos,className)
+        }
       case This() => ch << ALOAD_0
       case Null() => ch << ACONST_NULL
       case Not(exp) =>
