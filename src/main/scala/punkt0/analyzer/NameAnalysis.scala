@@ -310,8 +310,13 @@ object NameAnalysis extends Phase[Program, Program] {
         linkIdentExprs(node.rhs,lookupVar,classSymbol)
       case node: MethodCall =>
         linkIdentExprs(node.obj,lookupVar,classSymbol)
-        //NOT ON THIS ONE FOR NOW: linkIdentExprs(node.meth)
-        node.args.foreach(a => linkIdentExprs(a,lookupVar,classSymbol))
+
+        //Set "node.meth" symbol in type checking after obj expr has been evaluated
+
+        node.args.foreach{
+          a =>
+            linkIdentExprs(a,lookupVar,classSymbol)
+        }
 
       case node: Identifier =>
         lookupVar(node.value) match {

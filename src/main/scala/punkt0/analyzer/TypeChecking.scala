@@ -104,6 +104,10 @@ object TypeChecking extends Phase[Program, Program] {
                 for (i <- method.argList.indices) {
                   tcExpr(mExpr.args(i), method.argList(i).getType)
                 }
+
+                mExpr.meth.setSymbol(method)
+
+
                 mExpr.setType(method.getType)
                 method.getType
               }

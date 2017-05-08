@@ -306,13 +306,18 @@ object CodeGeneration extends Phase[Program, Unit] {
         ch << InvokeVirtual("java/io/PrintStream", "println", typeSignature)
       case m : MethodCall =>
         buildJVMStack(ch,m.obj,symPos,className)
+
+
         var methSignature = "(";
-        m.args foreach {
-          a =>
-            methSignature += p0ToCafeType(a.getType)
-            buildJVMStack(ch, a, symPos,className)
+        m.meth.getSymbol.asInstanceOf[MethodSymbol].argList foreach {
+          a => methSignature += p0ToCafeType(a.getType)
         }
         methSignature += ")" + p0ToCafeType(m.getType)
+
+        m.args foreach {
+          a =>
+            buildJVMStack(ch, a, symPos,className)
+        }
 
         ch << InvokeVirtual(m.obj.getType.asInstanceOf[TAnyRef].toString,m.meth.value,methSignature)
       case Block(exprs) =>
