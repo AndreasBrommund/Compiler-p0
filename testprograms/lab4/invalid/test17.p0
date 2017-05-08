@@ -3,7 +3,7 @@ class B {
 }
 
 class D extends B{
-  def b(a:Int): Int = {
+  override def b(a:Int): Int = {
     var b:Int = 2;
     b
   }
