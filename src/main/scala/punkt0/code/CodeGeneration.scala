@@ -34,8 +34,11 @@ object CodeGeneration extends Phase[Program, Unit] {
 
       val ch = classFile.addMainMethod.codeHandler
 
+      ch << LineNumber(mainDecl.line)
+
       mainDecl.vars foreach {
         v =>
+          ch << LineNumber(v.line)
           val index = ch.getFreshVar(p0ToCafeType(v.tpe.getType))
           symbolPositions += (v.getSymbol -> index)
           assignConstant(ch,index,v.expr)
@@ -65,7 +68,6 @@ object CodeGeneration extends Phase[Program, Unit] {
 
       ct.methods.foreach {
         m =>
-
           val argTypes = m.args.map {
             a => p0ToCafeType(a.tpe.getType)
           }
@@ -84,13 +86,17 @@ object CodeGeneration extends Phase[Program, Unit] {
     def generateMethodCode(ch: CodeHandler, mt: MethodDecl): Unit = {
       val methSym = mt.getSymbol
 
+      ch << LineNumber(mt.line)
+
       var symbolPositions = Map[VariableSymbol,Int]()
 
       for(i <- methSym.argList.indices){
+        ch << LineNumber(methSym.argList(i).line)
         symbolPositions += (methSym.argList(i) -> (i+1))
       }
 
       for(varDec <- mt.vars){
+        ch << LineNumber(varDec.line)
         val index = ch.getFreshVar(p0ToCafeType(varDec.tpe.getType))
         symbolPositions += (varDec.getSymbol -> index)
         assignConstant(ch,index,varDec.expr)
@@ -186,6 +192,8 @@ object CodeGeneration extends Phase[Program, Unit] {
   }
 
   def buildJVMStack(ch : CodeHandler, exprTree: ExprTree, symPos: Map[VariableSymbol,Int],className : String): Unit ={
+    ch << LineNumber(exprTree.line)
+
     exprTree match {
 
       case And(lhs,rhs) =>
