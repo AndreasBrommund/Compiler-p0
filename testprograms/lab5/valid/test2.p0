@@ -38,6 +38,7 @@ object Main extends App {
   c = "a" + b;
   c = new A().b();
   c = new A().b() + "d";
-  if (true) new A() else new B()
+  if (true) new A() else new B();
+  println(d)
 
 }
