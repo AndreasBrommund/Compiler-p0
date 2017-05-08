@@ -85,6 +85,6 @@ object Symbols {
       }
   }
 
-  class VariableSymbol(val name: String) extends Symbol
+  class VariableSymbol(val name: String,val constant: Boolean = false) extends Symbol
 
 }

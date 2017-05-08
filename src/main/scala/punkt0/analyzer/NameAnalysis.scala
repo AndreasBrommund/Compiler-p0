@@ -204,7 +204,7 @@ object NameAnalysis extends Phase[Program, Program] {
       methodSymbol.params.get(param.id.value) match {
         case Some(p) => Reporter.error("Parameter '" + param.id.value + "' is already declared at position: " + p.posString, param)
         case None =>
-          val variableSymbol = new VariableSymbol(param.id.value).setPos(param)
+          val variableSymbol = new VariableSymbol(param.id.value,true).setPos(param)
           methodSymbol.params += (variableSymbol.name -> variableSymbol)
           methodSymbol.argList = methodSymbol.argList :+ variableSymbol
           variableSymbol.setType(typeTree2Type(param.tpe,globalScope))
@@ -342,7 +342,16 @@ object NameAnalysis extends Phase[Program, Program] {
       case node: Println =>
         linkIdentExprs(node.expr,lookupVar,classSymbol)
       case node: Assign =>
+
+
+
+
         linkIdentExprs(node.id,lookupVar,classSymbol)
+
+        if(node.id.getSymbol.asInstanceOf[VariableSymbol].constant){
+          Reporter.error("Can't reassign method parameter: " + node.id.value, node)
+        }
+
         linkIdentExprs(node.expr,lookupVar,classSymbol)
       case node: This =>
         node.setType(new TAnyRef(classSymbol))
