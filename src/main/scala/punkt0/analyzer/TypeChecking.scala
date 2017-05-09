@@ -141,7 +141,7 @@ object TypeChecking extends Phase[Program, Program] {
 
           if (b.exprs.length > 1) { //Unesesery if size is 1
             for (e <- b.exprs.init) {
-              tcExpr(e,TUnit)
+                tcExpr(e)
             }
           }
           var typ : Type = TUnit
@@ -187,7 +187,7 @@ object TypeChecking extends Phase[Program, Program] {
               typ
             case _ =>
               i.setType(TUnit)
-              tcExpr(i.thn, TUnit)
+              tcExpr(i.thn,TUnit)
 
           }
         case w: While =>
