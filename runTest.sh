@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#http://www.csc.kth.se/~phaller/compilers/labs/punkt0_2.11-1.2.jar
+#wget http://www.csc.kth.se/~phaller/compilers/labs/punkt0_2.11-1.2.jar
 
 sbt compile
 
@@ -13,7 +13,7 @@ do
 	rm -rf classesOur/
 
 	#Reference compiler
-	scala -cp lib/cafebabe_2.11-1.2.jar:punkt0_2.11-1.0.jar punkt0.Main -d classes $f
+	scala -cp lib/cafebabe_2.11-1.2.jar:punkt0_2.11-1.2.jar punkt0.Main -d classes $f
 	
 	if [ "$?" != "0" ]
     	then
@@ -50,7 +50,7 @@ do
 
 	#Reference compiler
 
-	scala -cp lib/cafebabe_2.11-1.2.jar:punkt0_2.11-1.0.jar punkt0.Main -d classes $f
+	scala -cp lib/cafebabe_2.11-1.2.jar:punkt0_2.11-1.2.jar punkt0.Main -d classes $f
 
 	if [ "$?" != "1" ]
     	then
