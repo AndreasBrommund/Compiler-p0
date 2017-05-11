@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#wget http://www.csc.kth.se/~phaller/compilers/labs/punkt0_2.11-1.0.jar
+#http://www.csc.kth.se/~phaller/compilers/labs/punkt0_2.11-1.2.jar
 
 sbt compile
 
